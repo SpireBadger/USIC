@@ -48,7 +48,7 @@ try:
     # set arcpy environment to allow overwriting
     arcpy.env.overwriteOutput=True
 
-    ######--Main Text USIC---
+#----------------------Main Text-----------------------------------------
     # Set path variable
     cPath = r"C:\Temp"
     gdbName = "AL_USIC_2.gdb"
@@ -102,9 +102,11 @@ try:
         if field.name not in keepList and not field.required:
             delList.append(field.name)
             print("{} is added to the delete list.".format(field.name))
+            sys.stdout.flush()
         # If the field is in the keep list, pass to the next field
         else:
             print("Keeping {}.".format(field.name))
+            sys.stdout.flush()
             pass
     
     # Delete all features in deletion list
@@ -133,20 +135,20 @@ try:
     # Delete the temporary layer
     arcpy.Delete_management(tempLayer)
     
-##### Copy the Regulator Station##############################################
+#----------------------Regulator Stations-----------------------------------------
     # Create the regulator  variables
-    newReg = "RegulatorStation"
-    newRegPath = os.path.join(isGDB, newReg)
+    newVar = "RegulatorStation"
+    newVarPath = os.path.join(isGDB, newVar)
     # Change workspace  back to the tempSDE
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RegulatorStation',\
-                                            newRegPath)
+                                            newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
-    tempLayer = arcpy.MakeFeatureLayer_management(newReg, 'temp_lyr')
+    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
 
     # Create a list of variables to save
     keepList = ['OBJECTID','INSTALLDATE','LOCATIONDESCRIPTION','ROTATIONANGLE',\
@@ -164,9 +166,11 @@ try:
         if field.name not in keepList and not field.required:
             delList.append(field.name)
             print("{} is added to the delete list.".format(field.name))
+            sys.stdout.flush()
         # If the field is in the keep list, pass to the next field
         else:
             print("Keeping {}.".format(field.name))
+            sys.stdout.flush()
             pass   
         
     # Delete all features in deletion list
@@ -198,6 +202,146 @@ try:
     del keepList, delList, shp, shpPathFull
     # Delete the temporary layer
     arcpy.Delete_management(tempLayer)
+    
+#----------------------Abandoned Main-----------------------------------------
+    # Create the regulator  variables
+    newVar = "AbandonedMain"
+    newVarPath = os.path.join(isGDB, newVar)
+    # Change workspace  back to the tempSDE
+    arcpy.env.workspace = inputWS
+    
+    # Copy features to new gdb
+    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.AbandonedMain',\
+                                            newVarPath)
+    
+# Use a temporary feature layer to edit annotation
+    arcpy.env.workspace = isGDB
+    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+
+    # Create a list of variables to save
+    keepList = ['OBJECTID','MEASUREDLENGTH', 'CASTIRONTYPE', 'COATINGTYPE', \
+                'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
+    
+    # Create empty deletion list
+    delList = []    
+
+    # Get list of fields in temp layer
+    fields = arcpy.ListFields(tempLayer)
+
+    # Iterate through all fields in the temp feature layer
+    for field in fields:
+        # If the field name is not in the keep list or a required field
+        # add it to the empty deletion list
+        if field.name not in keepList and not field.required:
+            delList.append(field.name)
+            print("{} is added to the delete list.".format(field.name))
+            sys.stdout.flush()
+        # If the field is in the keep list, pass to the next field
+        else:
+            print("Keeping {}.".format(field.name))
+            sys.stdout.flush()
+            pass   
+        
+    # Delete all features in deletion list
+    arcpy.DeleteField_management(tempLayer, delList)
+    
+    # Set the new shapefile path variables
+    shp = "abandonMainUSIC.shp"
+    # Instead of using a full path, partials are used in case the pieces are
+    # used seperately further in.
+    shpPathFull = os.path.join(shpPath, shp)
+    
+    # If the shapefile already exists, delete it
+    if arcpy.Exists(shpPathFull):
+#        print("{} exists and will be deleted.".format(shpPathFull))
+        arcpy.Delete_management(shpPathFull)
+    else:
+#        print("{} not found and copy can proceed.".format(shpPathFull))
+        pass
+    
+    # Copy the temp layer to a new shapefile.
+    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
+#    print("Shapefile created.")
+    
+    # Copy the temp layer to a new shapefile.
+    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
+#    print("Shapefile created.")
+    
+    # Delete variables that will get re-used in the next section
+    del keepList, delList, shp, shpPathFull
+    # Delete the temporary layer
+    arcpy.Delete_management(tempLayer)
+    
+#----------------------Valves-----------------------------------------
+  # Create the variables
+    newVar = "Valves"
+    newVarPath = os.path.join(isGDB, newVar)
+    # Change workspace  back to the tempSDE
+    arcpy.env.workspace = inputWS
+    
+    # Copy features to new gdb
+    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Valve',\
+                                            newVarPath)
+    
+# Use a temporary feature layer to edit annotation
+    arcpy.env.workspace = isGDB
+    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+
+    # Create a list of variables to save
+    keepList = ['OBJECTID','SHAPE', 'INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
+                'MATERIAL', 'INSULATEDINDICATOR', 'VALVEENDS', 'VALVETYPE', \
+                'VALVEUSE', 'ROTATIONANGLE', 'VALVEMATERIAL', 'VALVESIZE', \
+                'LABELTEXT']
+    
+    # Create empty deletion list
+    delList = []    
+
+    # Get list of fields in temp layer
+    fields = arcpy.ListFields(tempLayer)
+
+    # Iterate through all fields in the temp feature layer
+    for field in fields:
+        # If the field name is not in the keep list or a required field
+        # add it to the empty deletion list
+        if field.name not in keepList and not field.required:
+            delList.append(field.name)
+            print("{} is added to the delete list.".format(field.name))
+            sys.stdout.flush()
+        # If the field is in the keep list, pass to the next field
+        else:
+            print("Keeping {}.".format(field.name))
+            sys.stdout.flush()
+            pass   
+        
+    # Delete all features in deletion list
+    arcpy.DeleteField_management(tempLayer, delList)
+    
+    # Set the new shapefile path variables
+    shp = "valveUSIC.shp"
+    # Instead of using a full path, partials are used in case the pieces are
+    # used seperately further in.
+    shpPathFull = os.path.join(shpPath, shp)
+    
+    # If the shapefile already exists, delete it
+    if arcpy.Exists(shpPathFull):
+#        print("{} exists and will be deleted.".format(shpPathFull))
+        arcpy.Delete_management(shpPathFull)
+    else:
+#        print("{} not found and copy can proceed.".format(shpPathFull))
+        pass
+    
+    # Copy the temp layer to a new shapefile.
+    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
+#    print("Shapefile created.")
+    
+    # Copy the temp layer to a new shapefile.
+    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
+#    print("Shapefile created.")
+    
+    # Delete variables that will get re-used in the next section
+    del keepList, delList, shp, shpPathFull
+    # Delete the temporary layer
+    arcpy.Delete_management(tempLayer)   
        
     # When done, remove the temp path containing the connection files
     shutil.rmtree(sdeTempPath)
