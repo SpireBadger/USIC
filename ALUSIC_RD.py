@@ -48,7 +48,7 @@ try:
 #----------------------Main Text-----------------------------------------
     # Set path variables
     cPath = r"C:\Temp"
-    gdbName = "AL_USIC_3.gdb"
+    gdbName = "AL_USIC.gdb"
     isGDB = os.path.join(cPath, gdbName)
     # Test if gdb exists, if so delete. If not, create
     if arcpy.Exists(isGDB):
@@ -70,6 +70,9 @@ try:
                                               'ORACLE', 'xs-bhm-dgp-1:1521/gsp',\
                                               'DATABASE_AUTH', 'GISADMIN', \
                                               'gisadmin','SAVE_USERNAME')
+    print("Database connection created at {0} to the AL Oracle Database."\
+          .format(sdeTempPath))
+    print("\n")
     # Set the new temp connection as the usable workspace
     inputWS = arcpy.env.workspace = sdeTempPath + r"\tempALServ.sde"
     
@@ -78,12 +81,14 @@ try:
     newmainText = os.path.join(isGDB, mainText)
     
     # Copy input FC features to new gdb
+    print("Beginning to copy to {}.".format(newmainText))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.MainText',\
                                             newmainText)
     
     # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management('mainText', 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','SHAPE_Length','SHAPE_Area','SHAPE',\
@@ -106,7 +111,7 @@ try:
             print("Keeping {}.".format(field.name))
             sys.stdout.flush()
             pass
-    
+    print("/n")
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
     
@@ -118,6 +123,7 @@ try:
     shpPathFull = os.path.join(shpPath, shp)
     # If the shapefile already exists, delete it
     if arcpy.Exists(shpPathFull):
+        print("Deleting existing shapefile.")
         arcpy.Delete_management(shpPathFull)
     else:
         pass
@@ -125,7 +131,7 @@ try:
     # Copy the temp layer to a new shapefile.
     arcpy.CopyFeatures_management(tempLayer, shpPathFull)
     print("A shapefile has been copied as {}.".format(shpPathFull))
-    
+    print("/n")
     # Delete variables that will get re-used in the next section
     del keepList, delList, shp, shpPathFull
     # Delete the temporary layer
@@ -139,6 +145,7 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RegulatorStation',\
                                             newVarPath)
        
@@ -182,7 +189,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys)                                      
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass                                      
     
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -216,12 +228,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.AbandonedMain',\
                                             newVarPath)
     
     # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','MEASUREDLENGTH', 'CASTIRONTYPE', 'COATINGTYPE', \
@@ -262,7 +276,11 @@ try:
         # NOTE: If there are any subtypes, keys should give a 1 value and
         # after finding a 1, it will delete all keys. 
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys)                                      
+            print("Subtype found at code {}.".format(keys))
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass                                        
     
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -295,12 +313,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Valve',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','SHAPE', 'INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
@@ -336,7 +356,11 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass              
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -371,12 +395,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Casing',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
@@ -410,7 +436,11 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
+            print("Subtype found at code {}.".format(keys))
             arcpy.RemoveSubtype_management(tempLayer,keys) 
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -443,12 +473,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Drip',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
@@ -481,7 +513,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
             arcpy.RemoveSubtype_management(tempLayer,keys) 
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -515,12 +552,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.ElectronicMarker',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','INSTALLDATE', 'DISTANCE1','DIRECTION1',\
@@ -555,7 +594,13 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
             arcpy.RemoveSubtype_management(tempLayer,keys) 
+    
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -589,12 +634,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.FirstCutRegulator',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
@@ -627,7 +674,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -661,12 +713,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
-    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Fittings',\
+    print("Beginning to copy to {}.".format(newVarPath))
+    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Fitting',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['OBJECTID','FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
@@ -701,7 +755,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -734,12 +793,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Main',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
@@ -776,6 +837,8 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
             arcpy.RemoveSubtype_management(tempLayer,keys) 
         
     # Delete all features in deletion list
@@ -810,12 +873,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Service',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
@@ -853,7 +918,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -887,12 +957,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.StopperFitting',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
@@ -925,7 +997,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -959,12 +1036,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Historical\GISADMIN.Premise',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
@@ -998,7 +1077,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -1032,12 +1116,14 @@ try:
     arcpy.env.workspace = inputWS
     
     # Copy features to new gdb
+    print("Beginning to copy to {}.".format(newVarPath))
     Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.CPRectifier',\
                                             newVarPath)
     
 # Use a temporary feature layer to edit annotation
     arcpy.env.workspace = isGDB
     tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
+    print("\n Temp layer created.")
 
     # Create a list of variables to save
     keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
@@ -1071,7 +1157,12 @@ try:
     sKeys = subtypes.keys()
     for keys in sKeys:
         if keys != 0:
-            arcpy.RemoveSubtype_management(tempLayer,keys) 
+            print("Subtype found at code {}.".format(keys))
+            sys.stdout.flush()
+            arcpy.RemoveSubtype_management(tempLayer,keys)
+        else:
+            print("No subtypes found.")
+            pass  
         
     # Delete all features in deletion list
     arcpy.DeleteField_management(tempLayer, delList)
@@ -1103,6 +1194,8 @@ try:
     # When done, remove the temp path containing the connection files
     shutil.rmtree(sdeTempPath)
 except:
+    shutil.rmtree(sdeTempPath)
+    print("Deleting temp SDE.")
     tb = sys.exc_info()[2]
     tbinfo = traceback.format_tb(tb)[0]
     pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" \
@@ -1112,5 +1205,3 @@ except:
     log.write("" + msgs + "")
     print(msgs)
     log.close()
-    
-    
