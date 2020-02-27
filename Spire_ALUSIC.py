@@ -39,7 +39,6 @@ try:
     log = open("C:\\Temp\ALLogFile.txt","a")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
-    # Changes
     # write datetime to log
     log.write("Log: " + str(d) + "\n")
     log.write("\n")
