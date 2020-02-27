@@ -238,7 +238,7 @@ try:
     print("\n Temp layer created.")
 
     # Create a list of variables to save
-    keepList = ['OBJECTID','MEASUREDLENGTH', 'CASTIRONTYPE', 'COATINGTYPE', \
+    keepList = ['OBJECTID','MEASUREDLENGTH', 'COATINGTYPE', \
                 'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
     
     # Create empty deletion list
@@ -725,7 +725,7 @@ try:
 
     # Create a list of variables to save
     keepList = ['OBJECTID','FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT','FITTINGSIZECODE'\
+                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
                 'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
                 'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
                 'BUILDING2','STREET2']
@@ -807,7 +807,7 @@ try:
 
     # Create a list of variables to save
     keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
-                'MATERIAL','NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
+                'NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
                 'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
                 'LOCATIONDESCRIPTION','PLASTICTYPE','PROJECTYEAR',\
                 'MANUFACTURER','LENGTHMX']
