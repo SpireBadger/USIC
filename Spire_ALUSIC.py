@@ -1,6 +1,6 @@
 # Project: AL to USIC data
 # Create Date: 02/13/2020
-# Last Updated: 02/21/2020
+# Last Updated: 02/27/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of the AL GIS data to send to USIC
@@ -117,7 +117,7 @@ try:
     
     # Set the new shapefile path variables
     shp = "MainTextUSIC.shp"
-    shpPath = "C:\Temp\SHP"
+    shpPath = r"\\pdatfile01\ProdData\GIS\USIC\SpireAL"
     # Instead of using a full path, partials are used in case the pieces are
     # used seperately further in.
     shpPathFull = os.path.join(shpPath, shp)
@@ -2386,7 +2386,7 @@ try:
     shutil.rmtree(sdeTempPath)
     # Clean up the temp folder by deleting the geodatabase created for the
     # shapefile production.
-#    arcpy.Delete_management(isGDB)
+    arcpy.Delete_management(isGDB)
 except:
     shutil.rmtree(sdeTempPath)
     print("Deleting temp SDE.")
