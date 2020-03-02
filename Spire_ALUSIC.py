@@ -1,12 +1,26 @@
 # Project: AL to USIC data
 # Create Date: 02/13/2020
-# Last Updated: 02/27/2020
-# Create by: Brad Craddick & Robert Domiano
+# Last Updated: 03/02/2020
+# Created by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of the AL GIS data to send to USIC
 # ArcGIS Version:   10.2
 # Python Version:   2.7.5
 # -----------------------------------------------------------------------
+# Project: Spire to USIC data compilation
+# Create Date: 02/13/2020
+# Last Updated: 03/02/2020
+# Create by: Brad Craddick & Robert Domiano
+# Updated by: Robert Domiano
+# Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
+# ArcGIS Version:   10.3
+# Python Version:   2.7.5
+# -----------------------------------------------------------------------
+
+# Import modules
+import sys, arcpy, datetime, traceback
+# import os
+
 
 # For testing purposes, the script will be run in unbuffered mode
 # This helps print statements generate as they are produced instead of at once.
@@ -21,22 +35,38 @@ class Unbuffered(object):
        self.stream.flush()
    def __getattr__(self, attr):
        return getattr(self.stream, attr)
-
-
-# Import modules
-import sys, os, arcpy, datetime, traceback
-#import shutil, tempfile
-
+   
+def copyFeature(shpName, sdeConnect, keepList, inputFC):
+    wsConnect = sdeConnect.getOutput(0)
+    arcpy.env.workspace = wsConnect
+    print("\n")
+    print("Connected to {0} for {1}.".format(sdeConnect,shpName))
+    print("\n")
+    fmap = arcpy.FieldMappings()
+    fmap.addTable(inputFC)
+    # Get all fields
+    fields = {f.name: f for f in arcpy.ListFields(inputFC)}
+    # Clean up field map based on keep list
+    for fname, fld in fields.iteritems():
+       if fld.type not in ('OID', 'Geometry') and 'shape' not in fname.lower():
+          if fname not in keepList:
+             print("Field name {0} is not on the Keep List and will be removed.".format(fname))
+             fmap.removeFieldMap(fmap.findFieldMapIndex(fname))
+    # Set shapefile path name
+    shpPath = r'C:\TempUSIC\SpireAL'
+    print("Creating the shapefile now.")
+    arcpy.conversion.FeatureClassToFeatureClass(inputFC, shpPath, shpName, '#', fmap)
+    print("Shapefile {0} has been created in {1}.".format(shpName, shpPath))
+    print("\n")
+                                                                                               
 # Set unbuffered mode
 sys.stdout = Unbuffered(sys.stdout)
-
-# Set up Try/Except for Error Logging
 try:
     # set datetime variable
     d = datetime.datetime.now()
     # open log file for holding errors
     # will also create file if not already there
-    log = open("C:\\Temp\ALLogFile.txt","a")
+    log = open("C:\TempUSIC\ALLogFile.txt","a")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
     # write datetime to log
@@ -45,2355 +75,302 @@ try:
     # set arcpy environment to allow overwriting
     arcpy.env.overwriteOutput=True
 
-#----------------------Main Text-----------------------------------------
-    # Set path variables
-    cPath = r"C:\Temp"
-    gdbName = "AL_USIC_1.gdb"
-    isGDB = os.path.join(cPath, gdbName)
-    # Test if gdb exists, if so delete. If not, create
-    if arcpy.Exists(isGDB):
-        print ("{} already exists and will be deleted.".format(isGDB))
-        arcpy.Delete_management(isGDB)
-    else:
-        pass
-    
-    print ("{} is being created.".format(isGDB))
-    # Create the new GDB
-    outWS = arcpy.CreateFileGDB_management(cPath, gdbName)
-        
+#--------------------Create SDE Connections------------------------------------
+    sdeTempPath = r"C:\TempUSIC"
     # Connecting to an existing SDE doesn't seem to work unless the connection
     # is already in place.
     # This is a work around to deal with that issue and avoid needing to connect
     # ahead of time outside the script.
-    sdeTempPath = cPath
-    sdeAL = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempALServ.sde', \
-                                              'ORACLE', 'xs-bhm-dgp-1-energen.com',\
-                                              'DATABASE_AUTH', 'GISADMIN', \
-                                              'gisadmin','SAVE_USERNAME')
-    print("Database connection created at {0} to the AL Oracle Database."\
+    
+##    if arcpy.Exists("C:\TempUSIC\tempALServ.sde"):
+##        arcpy.Delete_management("C:\TempUSIC\tempALServ.sde") stl-pgisdb-22.lac1.biz:1521/PGISM
+
+    sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
+                                              'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
+                                              'DATABASE_AUTH', 'IMAPVIEW', \
+                                              'ue2Y6vwm','SAVE_USERNAME')
+    print("Database connection created at {0} to the Mo East Oracle Database."\
           .format(sdeTempPath))
     print("\n")
-    # Set the new temp connection as the usable workspace
-    sdConnect = sdeAL.getOutput(0) 
-    inputWS = arcpy.env.workspace = sdConnect
     
+       # Create the MO West SDE Connection
+#    sdeMOW = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
+#                                              'ORACLE', 'stl-pgisdb-22.lac1.biz:1521/PGISM',\
+#                                              'DATABASE_AUTH', 'IMAPVIEW', \
+#                                              'ue2Y6vwm','SAVE_USERNAME')
+#    print("Database connection created at {0} to the MO West Oracle Database."\
+#          .format(sdeTempPath))
+#    print("\n")     
+    sdeAL = arcpy.CreateDatabaseConnection_management(sdeTempPath,'tempALServ.sde',\
+                                                      'ORACLE',\
+                                                      'xs-bhm-dgp-1.energen.com:1521/gsp',\
+                                                      'DATABASE_AUTH', 'GISADMIN',\
+                                                      'gisadmin','SAVE_USERNAME') 
+#----------------------------AL Setup----------------------------------------
     
-    #Create var for feature class & path to where the new one should  be
-    mainText = "mainText"
-    newmainText = os.path.join(isGDB, mainText)
-    
-    # Copy input FC features to new gdb
-    print("Beginning to copy to {}.".format(newmainText))
-    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.MainText',\
-                                            newmainText)
-    
-    # Use a temporary feature layer to edit annotation
-    arcpy.env.workspace = isGDB
-    tempLayer = arcpy.MakeFeatureLayer_management('mainText', 'temp_lyr')
-    print("\n Temp layer created.")
+   # Set path variables
+    cPath = r"C:\TempUSIC"
+    sdeConnect = sdeAL 
 
-    # Create a list of variables to save
-    keepList = ['OBJECTID','SHAPE_Length','SHAPE_Area','SHAPE',\
-                     'TextString', 'FontSize', 'Angle']
-    delList = []
-    
-    # Get list of fields in temp layer
-    fields = arcpy.ListFields(tempLayer)
+#---------Dimension Text-------------------------------------------------------
+    shpName = "mainText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
+    keepList = ['TextString', 'FontSize', 'Angle']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    del shpName, keepList, inputFC
 
-    # Iterate through all fields in the temp feature layer
-    for field in fields:
-        # If the field name is not in the keep list or a required field
-        # add it to the empty deletion list
-        if field.name not in keepList and not field.required:
-            delList.append(field.name)
-            print("{} is added to the delete list.".format(field.name))
-            sys.stdout.flush()
-        # If the field is in the keep list, pass to the next field
-        else:
-            print("Keeping {}.".format(field.name))
-            sys.stdout.flush()
-            pass
-    print("/n")
-    # Delete all features in deletion list
-    arcpy.DeleteField_management(tempLayer, delList)
+#---------Distribution Main-------------------------------------------------------
+    shpName = "main"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Main'
+    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
+                'NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
+                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
+                'LOCATIONDESCRIPTION','PLASTICTYPE','PROJECTYEAR',\
+                'MANUFACTURER','LENGTHMX']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
     
-    # Set the new shapefile path variables
-    shp = "MainTextUSIC.shp"
-    shpPath = r"\\gisappser2\Engineering_GIS\Domiano_Robert\USIC\USIC\SpireAL"
-    # Instead of using a full path, partials are used in case the pieces are
-    # used seperately further in.
-    shpPathFull = os.path.join(shpPath, shp)
-    # If the shapefile already exists, delete it
-    if arcpy.Exists(shpPathFull):
-        print("Deleting existing shapefile.")
-        arcpy.Delete_management(shpPathFull)
-    else:
-        pass
+#---------Regulator Station----------------------------------------------------
+    shpName = "RegulatorStation"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStation'
+    keepList = ['INSTALLDATE','LOCATIONDESCRIPTION','ROTATIONANGLE',\
+                'COMMENTS', 'MAXINLETPRESSURE', 'MAXOUTLETPRESSURE',\
+                'SUBTYPE','SETTINGNAME']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
     
-    # Copy the temp layer to a new shapefile.
-    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-    print("A shapefile has been copied as {}.".format(shpPathFull))
-    print("/n")
-    # Delete variables that will get re-used in the next section
-    del keepList, delList, shp, shpPathFull
-    # Delete the temporary layer
-    arcpy.Delete_management(tempLayer)
-#    
-##----------------------Regulator Stations--------------------------------------
-#    # Create the regulator  variables
-#    newVar = "RegulatorStation"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RegulatorStation',\
-#                                            newVarPath)
-#       
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    
-#    
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','INSTALLDATE','LOCATIONDESCRIPTION','ROTATIONANGLE',\
-#                'COMMENTS', 'MAXINLETPRESSURE', 'MAXOUTLETPRESSURE',\
-#                'SUBTYPE','SETTINGNAME']
-#    
-#    ###Locate all subtypes and add them to the keepList
-#
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass   
-#    
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass                                      
-#    
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "RegUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-#       
-##----------------------Abandoned Main-----------------------------------------
-#    # Create the regulator  variables
-#    newVar = "AbandonedMain"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.AbandonedMain',\
-#                                            newVarPath)
-#    
-#    # Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','MEASUREDLENGTH', 'COATINGTYPE', \
-#                'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass   
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    
-#    # Create list of subtypes in the temporary layer
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    # Store all subtype keys
-#    sKeys = subtypes.keys()
-#    # For each key in the key list, test if it is equal to zero
-#    for keys in sKeys:
-#        # If a key is found that doesn't equal keys, delete all keys
-#        # NOTE: If there are any subtypes, keys should give a 1 value and
-#        # after finding a 1, it will delete all keys. 
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass                                        
-#    
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "abandonMainUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-#    
-##----------------------Valves-----------------------------------------
-#  # Create the variables
-#    newVar = "Valves"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Valve',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','SHAPE', 'INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
-#                'MATERIAL', 'INSULATEDINDICATOR', 'VALVEENDS', 'VALVETYPE', \
-#                'VALVEUSE', 'ROTATIONANGLE', 'VALVEMATERIAL', 'VALVESIZE', \
-#                'LABELTEXT','TURNSTOCLOSE','DATECREATED','DATEMODIFIED'\
-#                'LOCATIONDESCRIPTION']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass              
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "valveUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)   
-#    
-##----------------------Casing----------------------------------
-#  # Create the variables
-#    newVar = "casing"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Casing',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
-#                'CASINGSIZE', 'CASINGMATERIAL','LABELTEXT']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            arcpy.RemoveSubtype_management(tempLayer,keys) 
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "casingUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)   
-##----------------------Drips---------------------------------
-#  # Create the variables
-#    newVar = "drips"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Drip',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys) 
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "dripUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)       
-#
-##----------------------Marker Balls---------------------------------
-#  # Create the variables
-#    newVar = "markBall"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.ElectronicMarker',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','INSTALLDATE', 'DISTANCE1','DIRECTION1',\
-#                'LOCATION1','BUILDING1','STREET1','DISTANCE2','DIRECTION2',\
-#                'LOCATION2','BUILDING2','STREET2']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys) 
-#    
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "markerBallUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-#
-##----------------------FirstCut Regulator---------------------------------
-#  # Create the variables
-#    newVar = "firstCutRegulator"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.FirstCutRegulator',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = "firstCutRegUSIC.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-#
-##----------------------Fittings---------------------------------
-#  # Create the variables
-#    newVar = "fittings"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Fitting',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['OBJECTID','FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-##------------------------Distribution Main-------------------------------
-#  # Create the variables
-#    newVar = "fdistMain"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Main',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
-#                'NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
-#                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
-#                'LOCATIONDESCRIPTION','PLASTICTYPE','PROJECTYEAR',\
-#                'MANUFACTURER','LENGTHMX']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(newVar)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(newVar,keys) 
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-#
-##------------------------Service-----------------------------------------------
-#  # Create the variables
-#    newVar = "service"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.Service',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
-#                'PIPETYPE','NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
-#                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
-#                'LOCATIONDESCRIPTION','HIGHDENSITYPLASTIC','PROJECTYEAR',\
-#                'PROJECTNUMBER','SERVICETYPE','MANUFACTURER','LENGTH604',\
-#                'STREETADDRESS','MAINMATERIAL']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-#
-##------------------------Stopper Fitting-------------------------------
-#  # Create the variables
-#    newVar = "service"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.StopperFitting',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-#    
-##------------------------Premise-------------------------------    
-#  # Create the variables
-#    newVar = "premise"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Historical\GISADMIN.Premise',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
-#                'PIPEID','MANUFACTURER']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)    
-#
-##------------------------CP Rectifier-------------------------------
-#  # Create the variables
-#    newVar = "cpRectifier"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.CPRectifier',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
-#                'LABELTEXT']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-#
-##------------------------Abandon Services--------------------------------------    
-#  # Create the variables
-#    newVar = "abandonService"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.AbandonedService',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['NOMINALSIZE','MATERIALCODE','DATEABANDONED','LABELTEXT',\
-#                'RETIREMENTPROJECTNUMBER']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)     
-#    
-##------------------------CP Anode-------------------------------------- -------    
-#   # Create the variables
-#    newVar = "anode"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.CPAnode',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
-#                'BOXTYPE','LOCATIONDESCRIPTION']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)     
-#
-##------------------------CP Test Point--------------------------------- -------
-#   # Create the variables
-#    newVar = "testPoint"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.CPTestPoint',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
-#                'STATIONTYPE','LOCATIONDESCRIPTION']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)     
-#    
-##------------------------Service Text--------------------------------- -------    
-#   # Create the variables
-#    newVar = "svcText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.ServiceText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)     
-#    
-##------------------------Misc Text--------------------------------- -----------    
-#   # Create the variables
-#    newVar = "miscText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Landbase\GISADMIN.MiscellaneousText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)    
-#    
-##------------------------Project Boundary-------------------------- -----------     
-#   # Create the variables
-#    newVar = "projBoundary"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.ProjectData\GISADMIN.ProjectBoundary',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)   
-#    
-##------------------------Valve Text-------------------------- -----------     
-#   # Create the variables
-#    newVar = "valveText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.ValveText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)     
-##------------------------Casing Text-------------------------- -----------     
-#   # Create the variables
-#    newVar = "casingText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.CasingText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-##------------------------Fitting Text-------------------------- -----------     
-#   # Create the variables
-#    newVar = "fittingText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.FittingText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)                  
-##------------------------Retired Main Text-------------------------- -----------     
-#   # Create the variables
-#    newVar = "retMainText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RetiredMainText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer) 
-#        
-##------------------------Retired Servicet-------------------------- -----------     
-#   # Create the variables
-#    newVar = "retServiceText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RetiredServiceText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)  
-#
-##------------------------Regulator Station------------------------- -----------     
-#   # Create the variables
-#    newVar = "regStationText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.RegulatorStationText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)  
-#
-##------------------------Stopper Fitting Text---------------------- -----------     
-#   # Create the variables
-#    newVar = "stopFittingText"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.StopperFittingText',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)
-#
-##------------------------Gas Lamp---------------------- -----------     
-#   # Create the variables
-#    newVar = "gasLamp"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.Gas\GISADMIN.GasLamp',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['SYMBOLROTATION','STREET_NUMBER','STREET_NAME','STREET_SUFFIX']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)               
-#    
-##------------------------Customer---------------------------------- -----------     
-#   # Create the variables
-#    newVar = "customer"
-#    newVarPath = os.path.join(isGDB, newVar)
-#    # Change workspace  back to the tempSDE
-#    arcpy.env.workspace = inputWS
-#    
-#    # Copy features to new gdb
-#    print("Beginning to copy to {}.".format(newVarPath))
-#    Textvar = arcpy.CopyFeatures_management('GISADMIN.CCSData\GISADMIN.Customer',\
-#                                            newVarPath)
-#    
-## Use a temporary feature layer to edit annotation
-#    arcpy.env.workspace = isGDB
-#    tempLayer = arcpy.MakeFeatureLayer_management(newVar, 'temp_lyr')
-#    print("\n Temp layer created.")
-#
-#    # Create a list of variables to save
-#    keepList = ['METERLOCATION','ADDRESS']
-#    
-#    # Create empty deletion list
-#    delList = []    
-#
-#    # Get list of fields in temp layer
-#    fields = arcpy.ListFields(tempLayer)
-#
-#    # Iterate through all fields in the temp feature layer
-#    for field in fields:
-#        # If the field name is not in the keep list or a required field
-#        # add it to the empty deletion list
-#        if field.name not in keepList and not field.required:
-#            delList.append(field.name)
-#            print("{} is added to the delete list.".format(field.name))
-#            sys.stdout.flush()
-#        # If the field is in the keep list, pass to the next field
-#        else:
-#            print("Keeping {}.".format(field.name))
-#            sys.stdout.flush()
-#            pass  
-#        
-#    # Subtypes prevent deletion of a field. This section strips subtypes from
-#    # all variables in dellist.
-#    # An Error can result if the code tries to remove subtypes from an FC and
-#    # finds none. That is why the if statement is used.
-#    subtypes = arcpy.da.ListSubtypes(tempLayer)
-#    sKeys = subtypes.keys()
-#    for keys in sKeys:
-#        if keys != 0:
-#            print("Subtype found at code {}.".format(keys))
-#            sys.stdout.flush()
-#            arcpy.RemoveSubtype_management(tempLayer,keys)
-#        else:
-#            print("No subtypes found.")
-#            pass  
-#        
-#    # Delete all features in deletion list
-#    arcpy.DeleteField_management(tempLayer, delList)
-#    
-#    # Set the new shapefile path variables
-#    shp = newVar + "USICAL.shp"
-#    # Instead of using a full path, partials are used in case the pieces are
-#    # used seperately further in.
-#    shpPathFull = os.path.join(shpPath, shp)
-#    
-#    # If the shapefile already exists, delete it
-#    if arcpy.Exists(shpPathFull):
-#        arcpy.Delete_management(shpPathFull)
-#    else:
-#        pass
-#    
-#    # Copy the temp layer to a new shapefile.
-#    arcpy.CopyFeatures_management(tempLayer, shpPathFull)
-#    print("A shapefile has been copied as {}.".format(shpPathFull))
-#    
-#    # Delete variables that will get re-used in the next section
-#    del keepList, delList, shp, shpPathFull
-#    # Delete the temporary layer
-#    arcpy.Delete_management(tempLayer)    
-#    
-#    
-#
-#    # When done, remove the temp path containing the connection files
-#    # shutil.rmtree(sdeTempPath)
-#    # Clean up the temp folder by deleting the geodatabase created for the
-#    # shapefile production.
-#    arcpy.Delete_management(isGDB)
-#    
+#---------Abandoned Main----------------------------------------------------
+    shpName = "AbandonedMain"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedMain'
+    keepList = ['MEASUREDLENGTH', 'COATINGTYPE', \
+                'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Valves----------------------------------------------------
+    shpName = "Valves"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Valve'
+    keepList = ['INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
+                'MATERIAL', 'INSULATEDINDICATOR', 'VALVEENDS', 'VALVETYPE', \
+                'VALVEUSE', 'ROTATIONANGLE', 'VALVEMATERIAL', 'VALVESIZE', \
+                'LABELTEXT','TURNSTOCLOSE','DATECREATED','DATEMODIFIED'\
+                'LOCATIONDESCRIPTION']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Casing----------------------------------------------------
+    shpName = "Casing"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Casing'
+    keepList = ['MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
+                'CASINGSIZE', 'CASINGMATERIAL','LABELTEXT']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+#---------Casing----------------------------------------------------
+    shpName = "Drips"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Drip'
+    keepList = ['LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Marker Ball----------------------------------------------------
+    shpName = "MarkerBall"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ElectronicMarker'
+    keepList = ['INSTALLDATE', 'DISTANCE1','DIRECTION1',\
+                'LOCATION1','BUILDING1','STREET1','DISTANCE2','DIRECTION2',\
+                'LOCATION2','BUILDING2','STREET2']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Marker Ball----------------------------------------------------
+    shpName = "FcRegulator"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FirstCutRegulator'
+    keepList = ['LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Fittings----------------------------------------------------
+    shpName = "Fittings"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Fitting'
+    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+                'BUILDING2','STREET2']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Fittings----------------------------------------------------
+    shpName = "Services"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Service'
+    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
+                'PIPETYPE','NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
+                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
+                'LOCATIONDESCRIPTION','HIGHDENSITYPLASTIC','PROJECTYEAR',\
+                'PROJECTNUMBER','SERVICETYPE','MANUFACTURER','LENGTH604',\
+                'STREETADDRESS','MAINMATERIAL']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Stopper Fitting----------------------------------------------------
+    shpName = "stopperFitting"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFitting'
+    keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+#---------Premises----------------------------------------------------
+    shpName = "Premise"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Historical\GISADMIN.Premise'
+    keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
+                'PIPEID','MANUFACTURER']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+#---------CP Rectifier----------------------------------------------------
+    shpName = "cpRectifier"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPRectifier'
+    keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
+                'LABELTEXT']
+    copyFeature(shpName,sdeConnect,keepList,inputFC) 
+
+##------------------------Abandon Services--------------------------------------     
+    shpName = "abandonService"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedService'
+    keepList = ['NOMINALSIZE','MATERIALCODE','DATEABANDONED','LABELTEXT',\
+                'RETIREMENTPROJECTNUMBER']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+##------------------------CP Anode-------------------------------------- -------      
+    shpName = "cpAnode"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPAnode'
+    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
+                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
+                'BOXTYPE','LOCATIONDESCRIPTION']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------CP Test Point-------------------------------------- -------      
+    shpName = "cpTestPoint"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPTestPoint'
+    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
+                'STATIONTYPE','LOCATIONDESCRIPTION']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+##------------------------Service Text--------------------------------- -------   
+    shpName = "serviceText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ServiceText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC) 
+    
+##------------------------Misc Text--------------------------------- ----------- 
+    shpName = "miscText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.MiscellaneousText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Project Boundary------------------------- ----------- 
+    shpName = "projBoundary"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.ProjectData\GISADMIN.ProjectBoundary'
+    keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Valve Text------------------------- ----------- 
+    shpName = "casingText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CasingText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC) 
+    
+##------------------------Valve Text------------------------- ----------- 
+    shpName = "valveText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ValveText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Fitting Text------------------------- ----------- 
+    shpName = "fittingText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FittingText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Retired Main Text------------------------- ----------- 
+    shpName = "retMainText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredMainText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Retired Main Text------------------------- ----------- 
+    shpName = "retSvcText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredServiceText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Regulator Station Text------------------------- ----------- 
+    shpName = "regStationText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStationText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Stopper Fitting Text------------------------- ----------- 
+    shpName = "stopFittingText"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFittingText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Stopper Fitting Text------------------------- ----------- 
+    shpName = "gasLamp"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.Gas\GISADMIN.GasLamp'
+    keepList = ['SYMBOLROTATION','STREET_NUMBER','STREET_NAME','STREET_SUFFIX']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+##------------------------Customer------------------------- ----------- 
+    shpName = "customer"
+    inputFC = sdeConnect.getOutput(0) + '\GISADMIN.CCSData\GISADMIN.Customer'
+    keepList = ['METERLOCATION','ADDRESS']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+############################   MISSOURI EAST    ############################### 
+    sdeConnect = sdeMOE
+
+##------------------------MoNat Dimension Text--------------------- ----------- 
+    shpName = "MOE_moNatDimText"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
+    keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------Marker Ball--------------------- ----------- 
+    shpName = "MOE_MarkerBall"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
+    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+                'BUILDING2','STREET2','LOCATION3','INSTALL_DATE','INSTALLED_ON',\
+                'OWNER','MARKERTYPE', 'SUBTYPECD','FULLTEXT']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+    
+##------------------------MoNat Dimension Line--------------------- ----------- 
+    shpName = "MOE_MONat_DimLine"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimLine'
+    keepList = ['OWNER']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+##------------------------Distribution Main Dimension--------------------- ----------- 
+    shpName = "MOE_DimLine"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMainDimension'
+    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)     
+    
+##------------------------Service Points--------------------------- ----------- 
+    shpName = "MOE_svcPoints"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
+    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
+                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)
+
+##------------------------Test Points--------------------------- ----------- 
+    shpName = "MOE_testPoint"
+    inputFC = sdeConnect.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
+    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
+                'STATIONTYPE','LOCATIONDESCRIPTION','SYMBOLROTATION','SUBTYPECD',\
+                'OPERATINGPRESSURE','LOCATION1MX','LOCATION2MX','ADDITIONALINFO',\
+                'CPSIZE','HOUSENUM','STREETNAME']
+    copyFeature(shpName,sdeConnect,keepList,inputFC)     
+    
+    
+    #Clean up the temp SDE connection
+#    arcpy.Delete_management(sdeAL)     
 except:
-    print("Deleting temp SDE and GDB.")
-    arcpy.Delete_management(sdeTempPath)
-    arcpy.Delete_management(isGDB)
+#    arcpy.Delete_management(sdeAL)
     tb = sys.exc_info()[2]
     tbinfo = traceback.format_tb(tb)[0]
     pymsg = "PYTHON ERRORS:\nTraceback info:\n" + tbinfo + "\nError Info:\n" \
@@ -2402,4 +379,4 @@ except:
     log.write("" + pymsg + "\n")
     log.write("" + msgs + "")
     print(msgs)
-    log.close()
+    log.close() 
