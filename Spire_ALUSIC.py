@@ -1,6 +1,6 @@
 # Project: AL to USIC data
 # Create Date: 02/13/2020
-# Last Updated: 03/02/2020
+# Last Updated: 03/03/2020
 # Created by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of the AL GIS data to send to USIC
@@ -60,9 +60,9 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC):
     if sdeConnect == sdeAL:
         print("Connecting to the {0} SDE.".format(paths[0]))
         shpPath = os.path.join(setPath, paths[0])
-    elif sdeConnect == sdeMOE:
-        shpPath = os.path.join(setPath, paths[1])
-        print("Connecting to the {0} SDE.".format(paths[1]))
+#    elif sdeConnect == sdeMOE:
+#        shpPath = os.path.join(setPath, paths[1])
+#        print("Connecting to the {0} SDE.".format(paths[1]))
     # Prior to using the directory, test to see if it exists.
     # If it does not, create a new directory based on that name.
     if not os.path.exists(shpPath):
@@ -106,12 +106,12 @@ try:
 ##    if arcpy.Exists("C:\TempUSIC\tempALServ.sde"):
 ##        arcpy.Delete_management("C:\TempUSIC\tempALServ.sde") stl-pgisdb-22.lac1.biz:1521/PGISM
 
-    sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
-                                              'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
-                                              'DATABASE_AUTH', 'IMAPVIEW', \
-                                              'ue2Y6vwm','SAVE_USERNAME')
-    print("Database connection created at {0} to the Mo East Oracle Database."\
-          .format(sdeTempPath))
+#    sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
+#                                              'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
+#                                              'DATABASE_AUTH', 'IMAPVIEW', \
+#                                              'ue2Y6vwm','SAVE_USERNAME')
+#    print("Database connection created at {0} to the Mo East Oracle Database."\
+#          .format(sdeTempPath))
     
        # Create the MO West SDE Connection
 #    sdeMOW = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
@@ -133,214 +133,214 @@ try:
     shpName = "mainText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
     keepList = ['TextString', 'FontSize', 'Angle']
-    copyFeature(shpName,sdeAL,keepList,inputFC)
-#
-##---------Distribution Main-------------------------------------------------------
-#    shpName = "main"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Main'
-#    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
-#                'NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
-#                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
-#                'LOCATIONDESCRIPTION','PLASTICTYPE','PROJECTYEAR',\
-#                'MANUFACTURER','LENGTHMX']
 #    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Regulator Station----------------------------------------------------
-#    shpName = "RegulatorStation"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStation'
-#    keepList = ['INSTALLDATE','LOCATIONDESCRIPTION','ROTATIONANGLE',\
-#                'COMMENTS', 'MAXINLETPRESSURE', 'MAXOUTLETPRESSURE',\
-#                'SUBTYPE','SETTINGNAME']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Abandoned Main----------------------------------------------------
-#    shpName = "AbandonedMain"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedMain'
-#    keepList = ['MEASUREDLENGTH', 'COATINGTYPE', \
-#                'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Valves----------------------------------------------------
-#    shpName = "Valves"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Valve'
-#    keepList = ['INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
-#                'MATERIAL', 'INSULATEDINDICATOR', 'VALVEENDS', 'VALVETYPE', \
-#                'VALVEUSE', 'ROTATIONANGLE', 'VALVEMATERIAL', 'VALVESIZE', \
-#                'LABELTEXT','TURNSTOCLOSE','DATECREATED','DATEMODIFIED'\
-#                'LOCATIONDESCRIPTION']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Casing----------------------------------------------------
-#    shpName = "Casing"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Casing'
-#    keepList = ['MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
-#                'CASINGSIZE', 'CASINGMATERIAL','LABELTEXT']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-##---------Drips----------------------------------------------------
-#    shpName = "Drips"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Drip'
-#    keepList = ['LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Marker Ball----------------------------------------------------
-#    shpName = "MarkerBall"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ElectronicMarker'
-#    keepList = ['INSTALLDATE', 'DISTANCE1','DIRECTION1',\
-#                'LOCATION1','BUILDING1','STREET1','DISTANCE2','DIRECTION2',\
-#                'LOCATION2','BUILDING2','STREET2']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------First Cut Regulator----------------------------------------------------
-#    shpName = "FcRegulator"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FirstCutRegulator'
-#    keepList = ['LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Fittings----------------------------------------------------
-#    shpName = "Fittings"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Fitting'
-#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Services----------------------------------------------------
-#    shpName = "Services"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Service'
-#    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
-#                'PIPETYPE','NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
-#                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
-#                'LOCATIONDESCRIPTION','HIGHDENSITYPLASTIC','PROJECTYEAR',\
-#                'PROJECTNUMBER','SERVICETYPE','MANUFACTURER','LENGTH604',\
-#                'STREETADDRESS','MAINMATERIAL']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Stopper Fitting----------------------------------------------------
-#    shpName = "stopperFitting"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFitting'
-#    keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Premises----------------------------------------------------
-#    shpName = "Premise"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Historical\GISADMIN.Premise'
-#    keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
-#                'PIPEID','MANUFACTURER']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#
-##---------CP Rectifier----------------------------------------------------
-#    shpName = "cpRectifier"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPRectifier'
-#    keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
-#                'LABELTEXT']
-#    copyFeature(shpName,sdeAL,keepList,inputFC) 
-#
-###------------------------Abandon Services--------------------------------------     
-#    shpName = "abandonService"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedService'
-#    keepList = ['NOMINALSIZE','MATERIALCODE','DATEABANDONED','LABELTEXT',\
-#                'RETIREMENTPROJECTNUMBER']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#
-###------------------------CP Anode-------------------------------------- -------      
-#    shpName = "cpAnode"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPAnode'
-#    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
-#                'BOXTYPE','LOCATIONDESCRIPTION']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------CP Test Point-------------------------------------- -------      
-#    shpName = "cpTestPoint"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPTestPoint'
-#    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
-#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-#                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
-#                'STATIONTYPE','LOCATIONDESCRIPTION']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#
-###------------------------Service Text--------------------------------- -------   
-#    shpName = "serviceText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ServiceText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC) 
-#    
-###------------------------Misc Text--------------------------------- ----------- 
-#    shpName = "miscText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.MiscellaneousText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Project Boundary------------------------- ----------- 
-#    shpName = "projBoundary"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.ProjectData\GISADMIN.ProjectBoundary'
-#    keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Casing Text------------------------- ----------- 
-#    shpName = "casingText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CasingText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC) 
-#    
-###------------------------Valve Text------------------------- ----------- 
-#    shpName = "valveText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ValveText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Fitting Text------------------------- ----------- 
-#    shpName = "fittingText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FittingText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Retired Main Text------------------------- ----------- 
-#    shpName = "retMainText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredMainText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Retired Service Text------------------------- ----------- 
-#    shpName = "retSvcText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredServiceText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Regulator Station Text------------------------- ----------- 
-#    shpName = "regStationText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStationText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Stopper Fitting Text------------------------- ----------- 
-#    shpName = "stopFittingText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFittingText'
-#    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-###------------------------Gas Lamp------------------------- ----------- 
-#    shpName = "gasLamp"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.GasLamp'
-#    keepList = ['SYMBOLROTATION','STREET_NUMBER','STREET_NAME','STREET_SUFFIX']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#
-###------------------------Customer------------------------- ----------- 
-#    shpName = "customer"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.CCSData\GISADMIN.Customer'
-#    keepList = ['METERLOCATION','ADDRESS']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
+##
+###---------Distribution Main-------------------------------------------------------
+##    shpName = "main"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Main'
+##    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
+##                'NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
+##                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
+##                'LOCATIONDESCRIPTION','PLASTICTYPE','PROJECTYEAR',\
+##                'MANUFACTURER','LENGTHMX']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Regulator Station----------------------------------------------------
+##    shpName = "RegulatorStation"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStation'
+##    keepList = ['INSTALLDATE','LOCATIONDESCRIPTION','ROTATIONANGLE',\
+##                'COMMENTS', 'MAXINLETPRESSURE', 'MAXOUTLETPRESSURE',\
+##                'SUBTYPE','SETTINGNAME']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Abandoned Main----------------------------------------------------
+##    shpName = "AbandonedMain"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedMain'
+##    keepList = ['MEASUREDLENGTH', 'COATINGTYPE', \
+##                'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Valves----------------------------------------------------
+##    shpName = "Valves"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Valve'
+##    keepList = ['INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
+##                'MATERIAL', 'INSULATEDINDICATOR', 'VALVEENDS', 'VALVETYPE', \
+##                'VALVEUSE', 'ROTATIONANGLE', 'VALVEMATERIAL', 'VALVESIZE', \
+##                'LABELTEXT','TURNSTOCLOSE','DATECREATED','DATEMODIFIED'\
+##                'LOCATIONDESCRIPTION']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Casing----------------------------------------------------
+##    shpName = "Casing"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Casing'
+##    keepList = ['MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
+##                'CASINGSIZE', 'CASINGMATERIAL','LABELTEXT']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+###---------Drips----------------------------------------------------
+##    shpName = "Drips"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Drip'
+##    keepList = ['LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Marker Ball----------------------------------------------------
+##    shpName = "MarkerBall"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ElectronicMarker'
+##    keepList = ['INSTALLDATE', 'DISTANCE1','DIRECTION1',\
+##                'LOCATION1','BUILDING1','STREET1','DISTANCE2','DIRECTION2',\
+##                'LOCATION2','BUILDING2','STREET2']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------First Cut Regulator----------------------------------------------------
+##    shpName = "FcRegulator"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FirstCutRegulator'
+##    keepList = ['LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Fittings----------------------------------------------------
+##    shpName = "Fittings"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Fitting'
+##    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+##                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+##                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+##                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+##                'BUILDING2','STREET2']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Services----------------------------------------------------
+##    shpName = "Services"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Service'
+##    keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
+##                'PIPETYPE','NOMINALPIPESIZE','PIPEGRADE','PRESSURECODE',\
+##                'MATERIALCODE','LABELTEXT','TRANSMISSION_FLAG',\
+##                'LOCATIONDESCRIPTION','HIGHDENSITYPLASTIC','PROJECTYEAR',\
+##                'PROJECTNUMBER','SERVICETYPE','MANUFACTURER','LENGTH604',\
+##                'STREETADDRESS','MAINMATERIAL']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Stopper Fitting----------------------------------------------------
+##    shpName = "stopperFitting"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFitting'
+##    keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+###---------Premises----------------------------------------------------
+##    shpName = "Premise"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Historical\GISADMIN.Premise'
+##    keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
+##                'PIPEID','MANUFACTURER']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##
+###---------CP Rectifier----------------------------------------------------
+##    shpName = "cpRectifier"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPRectifier'
+##    keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
+##                'LABELTEXT']
+##    copyFeature(shpName,sdeAL,keepList,inputFC) 
+##
+####------------------------Abandon Services--------------------------------------     
+##    shpName = "abandonService"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedService'
+##    keepList = ['NOMINALSIZE','MATERIALCODE','DATEABANDONED','LABELTEXT',\
+##                'RETIREMENTPROJECTNUMBER']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##
+####------------------------CP Anode-------------------------------------- -------      
+##    shpName = "cpAnode"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPAnode'
+##    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
+##                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+##                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
+##                'BOXTYPE','LOCATIONDESCRIPTION']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------CP Test Point-------------------------------------- -------      
+##    shpName = "cpTestPoint"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPTestPoint'
+##    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+##                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+##                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
+##                'STATIONTYPE','LOCATIONDESCRIPTION']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##
+####------------------------Service Text--------------------------------- -------   
+##    shpName = "serviceText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ServiceText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC) 
+##    
+####------------------------Misc Text--------------------------------- ----------- 
+##    shpName = "miscText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.MiscellaneousText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Project Boundary------------------------- ----------- 
+##    shpName = "projBoundary"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.ProjectData\GISADMIN.ProjectBoundary'
+##    keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Casing Text------------------------- ----------- 
+##    shpName = "casingText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CasingText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC) 
+##    
+####------------------------Valve Text------------------------- ----------- 
+##    shpName = "valveText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ValveText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Fitting Text------------------------- ----------- 
+##    shpName = "fittingText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FittingText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Retired Main Text------------------------- ----------- 
+##    shpName = "retMainText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredMainText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Retired Service Text------------------------- ----------- 
+##    shpName = "retSvcText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredServiceText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Regulator Station Text------------------------- ----------- 
+##    shpName = "regStationText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStationText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Stopper Fitting Text------------------------- ----------- 
+##    shpName = "stopFittingText"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFittingText'
+##    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
+####------------------------Gas Lamp------------------------- ----------- 
+##    shpName = "gasLamp"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.GasLamp'
+##    keepList = ['SYMBOLROTATION','STREET_NUMBER','STREET_NAME','STREET_SUFFIX']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##
+####------------------------Customer------------------------- ----------- 
+##    shpName = "customer"
+##    inputFC = sdeAL.getOutput(0) + '\GISADMIN.CCSData\GISADMIN.Customer'
+##    keepList = ['METERLOCATION','ADDRESS']
+##    copyFeature(shpName,sdeAL,keepList,inputFC)
+##    
 #############################   MISSOURI EAST    ############################### 
 #
 ##------------------------MoNat Dimension Text--------------------- ----------- 
-    shpName = "MOE_moNatDimText"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
-    keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    shpName = "MOE_moNatDimText"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
+#    keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
 #    
 ###------------------------Marker Ball--------------------- ----------- 
 #    shpName = "MOE_MarkerBall"
@@ -457,7 +457,7 @@ try:
     arcpy.env.workspace = ""
     arcpy.ClearWorkspaceCache_management(sdeAL)
     os.remove(sdeAL.getOutput(0))
-    os.remove(sdeMOE.getOutput(0))
+#    os.remove(sdeMOE.getOutput(0))
     # close out the log file
     print("Closing the log file.")
     log.close() 
