@@ -42,7 +42,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC):
     # A list of current Spire USIC Directories and areas
     paths = ['SpireAL','SpireMOEast','SpireMoWest']
     # Set variable to the path declared in script
-    setPath = r"\\pdatfile01\ProdData\GIS\USIC"
+    setPath = r'\\pdatfile01\ProdData\GIS\USIC'
     # Determine what SDE is being used and set shpPath to point to a matching
     # directory to store shapefiles in.
     if sdeConnect == sdeAL:
@@ -94,12 +94,14 @@ try:
                                                       'gisadmin','SAVE_USERNAME')
     print("Database connection created at {0} to the Alabama Database."\
           .format(sdeTempPath))
-#----------------------------AL Setup------------------------------------------
-#---------Dimension Text-------------------------------------------------------
-    shpName = "mainText"
-    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
-    keepList = ['TEXTSTRING','ANGLE','FONTSIZE']
-    copyFeature(shpName,sdeAL,keepList,inputFC)
+##----------------------------AL Setup------------------------------------------
+##---------Dimension Text-------------------------------------------------------
+#    shpName = "mainText"
+#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
+#    keepList = ['TEXTSTRING','ANGLE','FONTSIZE']
+#    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+
 #---------Distribution Main-------------------------------------------------------
     shpName = "main"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Main'
@@ -278,6 +280,18 @@ try:
 ##------------------------Regulator Station Text------------------------- -----
     shpName = "regulatorStationText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStationText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+###------------------------Leader Lines------------------------- -----
+    shpName = "LeaderLines"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.LeaderLine'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+###------------------------Leader Lines------------------------- -----
+    shpName = "HookLeader"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.HookLeader'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
