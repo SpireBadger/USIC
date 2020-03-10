@@ -1,11 +1,12 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 03/06/2020
+# Last Updated: 03/09/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
 # ArcGIS Version:   10.3
 # Python Version:   2.7.5
+# For a changelog of updates, visit the github at: https://github.com/SpireBadger/USIC
 # -----------------------------------------------------------------------
 
 # Import modules
@@ -60,15 +61,17 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     # Set variable to the path declared in script
     # TO CHANGE WHAT DIRECTORY THIS CREATES THE BASE FILES IN, POINT THIS 
     # VARIABLE TO DESIRED DIRECTORY.
-    setPath = sdeTempPath
+    setPath = r"\\pdatfile01\ProdData\GIS\USIC"
     # Global variables for the folder directories are created for use outside
     # the function
-    global shpPath, USICpdf
+    global shpPath,USICpdf
     # Determine what SDE is being used and set shpPath to point to a matching
     # directory to store shapefiles in.
     if sdeConnect == sdeAL:
         print("Connecting to the {0} SDE.".format(paths[0]))
         shpPath = os.path.join(setPath, paths[0])
+        USICpdfPath = paths[1] + pdfN
+        USICpdf = os.path.join(sdeTempPath, USICpdfPath)
     elif sdeConnect == sdeMOE or sdeConnect == sdeMOEPoly:
         shpPath = os.path.join(setPath, paths[1])
         print("Connecting to the {0} SDE.".format(paths[1]))
@@ -237,7 +240,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 #---------Marker Ball----------------------------------------------------
-    shpName = "MarkerBall"
+    shpName = "ElectronicMarker"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ElectronicMarker'
     keepList = ['INSTALLDATE', 'DISTANCE1','DIRECTION1',\
                 'LOCATION1','BUILDING1','STREET1','DISTANCE2','DIRECTION2',\
@@ -245,7 +248,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 #---------First Cut Regulator----------------------------------------------------
-    shpName = "FcRegulator"
+    shpName = "FirstCutRegulator"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FirstCutRegulator'
     keepList = ['LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
@@ -272,7 +275,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 #---------Stopper Fitting----------------------------------------------------
-    shpName = "stopperFitting"
+    shpName = "StopperFitting"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFitting'
     keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
     copyFeature(shpName,sdeAL,keepList,inputFC)
@@ -285,7 +288,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
 #---------CP Rectifier----------------------------------------------------
-    shpName = "cpRectifier"
+    shpName = "CPRectifier"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPRectifier'
     keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
                 'LABELTEXT']
@@ -299,7 +302,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
 ##------------------------CP Anode-------------------------------------- -------      
-    shpName = "cpAnode"
+    shpName = "CPAnode"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPAnode'
     keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
                 'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
@@ -308,7 +311,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 ##------------------------CP Test Point-------------------------------------- -------      
-    shpName = "cpTestPoint"
+    shpName = "CPTestPoint"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPTestPoint'
     keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
                 'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
@@ -323,13 +326,13 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC) 
     
 ##------------------------Misc Text--------------------------------- ----------- 
-    shpName = "miscText"
+    shpName = "MiscellaneousText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.MiscellaneousText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 ##------------------------Project Boundary------------------------- ----------- 
-    shpName = "projBoundary"
+    shpName = "ProjectBoundary"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.ProjectData\GISADMIN.ProjectBoundary'
     keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
     copyFeature(shpName,sdeAL,keepList,inputFC)
@@ -353,13 +356,13 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 ##------------------------Retired Main Text------------------------- ----------- 
-    shpName = "retMainText"
+    shpName = "RetiredMainText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredMainText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 ##------------------------Retired Service Text------------------------- ----------- 
-    shpName = "retSvcText"
+    shpName = "RetiredServiceText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredServiceText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
@@ -371,7 +374,7 @@ try:
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 ##------------------------Stopper Fitting Text------------------------- ----------- 
-    shpName = "stopFittingText"
+    shpName = "stopperFittingText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFittingText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
@@ -555,6 +558,11 @@ try:
 
 #   Set the workspace to the new pdf folder.
     arcpy.env.workspace = USICpdf
+    
+    # Create a list of any existing pdfs. If present, delete them.
+    for csv_file in (arcpy.ListFiles("*.pdf") or []):
+        print("Deleting existing PDFs.")
+        os.remove(USICpdf+"\\"+csv_file)
 
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
@@ -627,12 +635,7 @@ try:
 
 #   Set the workspace to the new pdf folder.
     arcpy.env.workspace = USICpdf
-    
-    # Create a list of any existing pdfs. If present, delete them.
-    for csv_file in (arcpy.ListFiles("*.pdf") or []):
-        print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
-        
+            
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
     with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATECREATE'], query) as cursor:
@@ -1011,12 +1014,7 @@ try:
 
 #   Set the workspace to the new pdf folder.
     arcpy.env.workspace = USICpdf
-    
-    # Create a list of any existing pdfs. If present, delete them.
-    for csv_file in (arcpy.ListFiles("*.pdf") or []):
-        print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
-        
+            
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
     with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP'], query) as cursor:
