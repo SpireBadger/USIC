@@ -93,7 +93,8 @@ git clone https://github.com/SpireBadger/USIC.git
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vel mauris non tellus feugiat dictum. In ullamcorper pulvinar ullamcorper. Suspendisse nibh neque, semper sit amet laoreet vitae, ullamcorper a tellus. Etiam in neque sed est dignissim facilisis quis sed libero. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Ut neque dolor, luctus id vulputate at, tempus ac lacus. Integer luctus bibendum nulla at semper. Aliquam tincidunt suscipit lorem et viverra. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum vel lacus nulla. Maecenas semper nisi vel odio commodo pellentesque. Cras in porttitor tellus. Nulla ultrices mauris quis ipsum convallis, nec posuere lacus bibendum. Quisque at purus nisi. Cras leo erat, finibus nec bibendum pellentesque, hendrerit in nisl. Donec iaculis leo libero, eget blandit arcu congue eget. 
+The combined USIC script and the Alabama USIC script will function as is and are pointed toward the production USIC folder. In order to alter the directed path, simply change where the variable setPath is pointing. setpath is first established on line 64.
+The log file will be created on the running computer's C: drive at TempUSIC. To alter this path, change the variable sdeTempPath located on line 113. If line 113 is altered, then line 64, setPath, does not need to also be altered. 
 
 
 <!-- ROADMAP -->
@@ -125,7 +126,7 @@ Project Link: [https://github.com/SpireBadger/USIC](https://github.com/SpireBadg
 ## Acknowledgements
 
 * Brad Craddick
-* []()
+* Robert Domiano
 * []()
 
 
