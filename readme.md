@@ -20,7 +20,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/SpireBadger/USIC">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="SpireWhite.jpg" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Spire USIC Transfer Script</h3>
@@ -66,7 +66,7 @@
 
 ### Built With
 
-* [Python 2.7]()
+* [Python 2.7](https://www.python.org/downloads/release/python-275/)
 
 
 
@@ -124,7 +124,7 @@ Project Link: [https://github.com/SpireBadger/USIC](https://github.com/SpireBadg
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
-* [Brad Craddick]()
+* Brad Craddick
 * []()
 * []()
 
