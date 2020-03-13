@@ -373,11 +373,53 @@ try:
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
+###------------------------Leader Lines------------------------- -----
+    shpName = "LeaderLines"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.LeaderLine'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+###------------------------Leader Lines------------------------- -----
+    shpName = "HookLeader"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.HookLeader'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
 ##------------------------Stopper Fitting Text------------------------- ----------- 
     shpName = "stopperFittingText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFittingText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
+
+##------------------------Location Description Text------------------------- -------
+    shpName = "LocationMeasurement"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.locationMeasurement'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+
+##------------------------Station Plus Text------------------------- -------
+    shpName = "StationPlus"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.StationPlus'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+
+##------------------------Detail Annotation Text------------------------- -------
+    shpName = "DetailAnnotation"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.DetailAnnotation'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+##------------------------Notes Text------------------------- -------
+    shpName = "Notes"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.Notes'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
+    
+##------------------------Main Authorization Number Text-----------------------
+    shpName = "mainAuthorizationNumberText"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainAuthorizationNumberText'
+    keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)    
     
 ##------------------------Gas Lamp------------------------- ----------- 
     shpName = "gasLamp"
