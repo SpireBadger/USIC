@@ -80,6 +80,8 @@ try:
     log.write("\n")
     # set arcpy environment to allow overwriting
     arcpy.env.overwriteOutput=True
+    # Set environment to transport subtype descriptions
+    arcpy.env.transferDomains = True
 
 #--------------------Create SDE Connections------------------------------------
     # Connecting to an existing SDE doesn't seem to work unless the connection
