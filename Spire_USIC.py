@@ -43,6 +43,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     wsConnect = sdeConnect.getOutput(0)
     arcpy.env.workspace = wsConnect
     # Empty field mapping object created
+    global fmap
     fmap = arcpy.FieldMappings()
     # The input FC is added to the field mappings object
     fmap.addTable(inputFC)
@@ -61,7 +62,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     # Set variable to the path declared in script
     # TO CHANGE WHAT DIRECTORY THIS CREATES THE BASE FILES IN, POINT THIS 
     # VARIABLE TO DESIRED DIRECTORY.
-    setPath = r"\\pdatfile01\ProdData\GIS\USIC"
+    setPath = sdeTempPath
     # Global variables for the folder directories are created for use outside
     # the function
     global shpPath,USICpdf
@@ -100,8 +101,6 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
                                                 sqlQ, fmap)
     print("Shapefile has been created in {0}.".format(newSHP))
     print("\n")
-    # Delete inputs to prepare for next shapefile
-    del shpName, keepList, inputFC, sdeConnect
     # return none
     return
                                                                                                
@@ -110,7 +109,7 @@ sys.stdout = Unbuffered(sys.stdout)
 try:
     # set datetime variable
     d = datetime.datetime.now()
-    sdeTempPath = r"C:\TempUSIC"
+    sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
     if not os.path.exists(sdeTempPath):
         os.mkdir(sdeTempPath)
         print("Temporary directory not found. A new directory has been " + \
@@ -120,7 +119,9 @@ try:
 
     # open log file for holding errors
     # will also create file if not already there
-    log = open("C:\TempUSIC\LogFile.txt","a")
+    logName = "LogFile.txt"
+    logPath = os.path.join(sdeTempPath, logName)
+    log = open(logPath,"a")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
     # write datetime to log
@@ -178,20 +179,20 @@ try:
           .format(sdeTempPath))
     print("\n")    
     
-#----------------------------AL Setup----------------------------------------
-#---------Dimension Text-------------------------------------------------------
-    # Only this first shapefile will be commented, all others follow the same format unless otherwise
-    # noted in comments
-      # Set the shapefile name
-    shpName = "mainText"
-     # Set variable to a path of where the input Feature class is located.
-     # getOutput is used to force sdeAL path to be a string.
-     # sdeAL is used in case the sdeTempPath is changed to limit number of changes needed in the script.
-    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
-   # Create a list of all field names to be kept.     
-    keepList = ['TextString', 'FontSize', 'Angle']
-   # Run the copyFeature function to create the shapefile.     
-    copyFeature(shpName,sdeAL,keepList,inputFC)
+##----------------------------AL Setup----------------------------------------
+##---------Dimension Text-------------------------------------------------------
+#    # Only this first shapefile will be commented, all others follow the same format unless otherwise
+#    # noted in comments
+#      # Set the shapefile name
+#    shpName = "mainText"
+#     # Set variable to a path of where the input Feature class is located.
+#     # getOutput is used to force sdeAL path to be a string.
+#     # sdeAL is used in case the sdeTempPath is changed to limit number of changes needed in the script.
+#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
+#   # Create a list of all field names to be kept.     
+#    keepList = ['TextString', 'FontSize', 'Angle']
+#   # Run the copyFeature function to create the shapefile.     
+#    copyFeature(shpName,sdeAL,keepList,inputFC)
 #
 ##---------Distribution Main-------------------------------------------------------
 ##    shpName = "main"
@@ -436,309 +437,309 @@ try:
 ##    
 ##############################   MISSOURI EAST    ############################### 
 ##
-###------------------------MoNat Dimension Text--------------------- ----------- 
-    shpName = "DimMoNatTextUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
-    keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-##------------------------Marker Ball--------------------- ----------- 
-    shpName = "MarkerBallUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
-    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','LOCATION3','INSTALL_DATE','INSTALLED_ON',\
-                'OWNER','MARKERTYPE', 'SUBTYPECD','FULLTEXT']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-##------------------------MoNat Dimension Line--------------------- ----------- 
-    shpName = "DimLineMoNatUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimLine'
-    keepList = ['OWNER']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-
-##------------------------Distribution Main Dimension--------------------- ----------- 
-    shpName = "DistributionMainDimUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMainDimension'
-    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)     
-    
-##------------------------Service Points--------------------------- ----------- 
-    shpName = "ServicePointUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
-    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
-                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-
-##------------------------Test Points--------------------------- ----------- 
-    shpName = "AnodeUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
-    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
-                'STATIONTYPE','LOCATIONDESCRIPTION','SYMBOLROTATION','SUBTYPECD',\
-                'OPERATINGPRESSURE','LOCATION1MX','LOCATION2MX','ADDITIONALINFO',\
-                'CPSIZE','HOUSENUM','STREETNAME']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)     
-    
-##------------------------Ctrl Fittings--------------------------- ----------- 
-    shpName = "ControllableFittingUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ControllableFitting'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)  
-
-##------------------------nON-Ctrl Fittings--------------------------- ----------- 
-    shpName = "NonControllableFittingMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.NonControllableFitting'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-##------------------------abandoned Services--------------------------- ----------- 
-    shpName = "AbandonedGasServiceUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasService'
-    keepList = ['SUBTYPECD','NOMINALDIAMETER','MATERIAL','FIELDBOOKPATH',\
-                'MXSTREETADDRESS','MXTEELOCATION','MXCURBBOXLOCATION',\
-                'MXCURBDESCRIPTION','MXSERVICELOCATION','MXRISERLOCATION',\
-                'MXRISERDESCRIPTION','MXMAINLOCATION','MXMAINSIZE','MXMAINMATERIAL',\
-                'DATECREATED','DATEMODIFIED','OPERATINGPRESSURE','STREETNUMBER',\
-                'STREETNAME','STREETSUFFIX','ONE_HUNDRED_FOOT_DISPLAY','REASON']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-##------------------------Valves--------------------------- ----------- 
-    shpName = "GasValveMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
-                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
-                'MATERIAL','MATERIALMX','VALVEDIAMETER','VALVETYPE','VALVEUSE',\
-                'CLOCKWISETOCLOSE','NORMALPOSITION','NONESSENTIAL','NUMBEROFTURNS',\
-                'VALVENUMBER','VALVELOCATION1','VALVELOCATION2','VALVELOCATION3',\
-                'FITTINGNUMBER']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-##------------------------Drips--------------------------- ----------- 
-    shpName = "DripMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Drip'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
-                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
-                'MATERIAL','DRIPTYPE','CONNECTYPE','OFFSET']
-    copyFeature(shpName,sdeMOE,keepList,inputFC)
-    
-###------------------------Distribution Main----------------------- -----------
-    ## Distribution main is unique and requires more manipulation to produce. 
-    shpName = "DistributionMainUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
-    keepList = ['MXLOCATION','NOMINALDIAMETER','JOINTTRENCH','DATEINSTALLED',\
-                'LENGTHMX','MATERIALMX','MATERIAL','FIELDBOOKPATH',\
-                'OPERATINGPRESSURE','COATINGTYPE','RELAYEDSIZE','RELAYEDMATERIAL']
-    # Distribution main that belongs to Spire is the only main we want for the 
-    # final SHP. This sql expression helps to secure that.
-    sqlQ=r"NOT OWNER in ( 'Southern Star', 'MRT') AND NOT OWNER IS NULL"
-    copyFeature(shpName, sdeMOE, keepList, inputFC, sqlQ)
-    
-    # Set the workspace to the shapefile folder 
-    arcpy.env.workspace = shpPath
-    # Add a new field for FieldNote to the newly created shapefile
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")
-    # Iterate through the newly created field and FIELDBOOKP                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
-        for row in cursor:
-            # This sets any blank or null fieldbookpaths to none
-            if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-            if row[0].rfind('\\') > 0:
-                # Find the exact location of last \\
-                slashes=row[0].rfind('\\')
-                # Add one to the location of the start, to keep everything after the first \
-                slashIndx= slashes+1
-                # Count the total length of string
-                charCount=len(row[0])
-                # 
-                ok=row[0][slashIndx:charCount]
-                # Strip out everything before the last \ and store the remainder in a variable
-                ok2 = ok.strip()
-                row[1] = ok2
-                cursor.updateRow(row)
-            if row[0].rfind('/') > 0:
-                thats=row[0].rfind('/')
-                that1= thats+1
-                theother=len(row[0])
-                ok=row[0][that1:theother]
-                ok2=ok.strip()
-                these=row[0].replace(str(that1),'')
-                row[1] = ok2
-                cursor.updateRow(row)
-    # Clean up the cursor object                        
-    del cursor
-###-----------------------------Create Main PDF Folder-------------------------
-    # Copy pdfs of field books modified in the last 14 days.
-    # Set current date variable
-    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
-    # set date variable 14 days back from current d ate
-    d = datetime.date.today() - datetime.timedelta(days=14)
-    # Set a sql query using dates
-    query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
-
-#   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
-    
-    # Create a list of any existing pdfs. If present, delete them.
-    for csv_file in (arcpy.ListFiles("*.pdf") or []):
-        print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
-
-    # Create a search cursor for the feature layer
-    # for each row in the cursor based on the time query
-    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATEINSTAL'], query) as cursor:
-        print("Searching for PDFs.")
-        for row in cursor:
-            print row[0]
-#            print row[1]
-            if row[0] <> 'None' and arcpy.Exists(row[0]):
-                shutil.copy2(row[0], USICpdf)
-            else:
-                print("Row is blank.")
-    del cursor
-    # Delete the fieldbook path as its no longer needed
-    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
-    
-#------------------------Services----------------------- ---------------------
-    shpName = "ServiceUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
-    keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
-                'BRANCHTYPE','SERVICENUMBER','FIELDBOOKPATH','TEELOCATION',\
-                'TEEDESCRIPTION','CURBBOXLOCATION','SERVICELOCATION',\
-                'RISERLOCATION','RISERDESCRIPTION','MAINLOCATION','MAINDEPTH',\
-                'MAINSIZE','MAINMATERIAL','EFV','SUBTYPECD','MXLOCATION']
-    sqlQ=r"(NOT FIELDBOOKPATH IS null AND NOT FIELDBOOKPATH = 'NO FIELDBOOK' ) OR( OWNER = 'MoNat')"
-    copyFeature(shpName, sdeMOE, keepList, inputFC, sqlQ)
-    
-    arcpy.env.workspace = shpPath
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
-        for row in cursor:
-            if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-            if row[0].rfind('\\') > 0:
-                # Find the exact location of last \\
-                slashes=row[0].rfind('\\')
-                # Add one to the location of the start, to keep everything after the first \
-                slashIndx= slashes+1
-                # Count the total length of string
-                charCount=len(row[0])
-                # 
-                ok=row[0][slashIndx:charCount]
-                # Strip out everything before the last \ and store the remainder in a variable
-                ok2 = ok.strip()
-                row[1] = ok2
-                cursor.updateRow(row)
-            if row[0].rfind('/') > 0:
-                thats=row[0].rfind('/')
-                that1= thats+1
-                theother=len(row[0])
-                ok=row[0][that1:theother]
-                ok2=ok.strip()
-                these=row[0].replace(str(that1),'')
-                row[1] = ok2
-                cursor.updateRow(row)                        
-    del cursor
-###-----------------------------Create Service PDFs-------------------------
-    # Copy pdfs of field books modified in the last 14 days.
-    # Set current date variable
-    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
-    # set date variable 14 days back from current d ate
-    d = datetime.date.today() - datetime.timedelta(days=14)
-    # Set a sql query using dates
-    query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
-
-#   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
-            
-    # Create a search cursor for the feature layer
-    # for each row in the cursor based on the time query
-    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATECREATE'], query) as cursor:
-        print("Searching for PDFs.")
-        for row in cursor:
-            print row[0]
-#            print row[1]
-            if row[0] != 'NO FIELDBOOK' and arcpy.Exists(row[0]):
-                print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)
-            elif row[0].find(r'\\gisappser2\images') > 0 and row[0] != 'NO FIELDBOOK'and row[0] != r'\\gisappser2\images\Laclede Gas\pdf\pdf 2B checked\Laclede\1643-75.pdf':
-                print("PDF found in images.")
-                shutil.copy2(row[0], USICpdf)                
-            else:
-                print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
-    del row, cursor
-    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
-###-----------------------------Abandoned Main-------------------------    
-    shpName = "AbandonedGasPipeUSICMoEast"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasPipe'
-    keepList = ['OWNER','DATECREATED','DATEMODIFIED','RETIREDATE','REASON',\
-                'FIELDBOOKPATH','MATERIALMX','NOMINALDIAMETER','MATERIAL',\
-                'WORKREQUESTID','OPERATINGPRESSURE','JOINTTRENCH','DATEINSTALLED',\
-                'COATINGTYPE','MAINTYPE','COUNTY']
-    copyFeature(shpName, sdeMOE, keepList, inputFC)
-    
-    arcpy.env.workspace = shpPath
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
-        for row in cursor:
-            if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-            if row[0].rfind('\\') > 0:
-                # Find the exact location of last \\
-                slashes=row[0].rfind('\\')
-                # Add one to the location of the start, to keep everything after the first \
-                slashIndx= slashes+1
-                # Count the total length of string
-                charCount=len(row[0])
-                # 
-                ok=row[0][slashIndx:charCount]
-                # Strip out everything before the last \ and store the remainder in a variable
-                ok2 = ok.strip()
-                row[1] = ok2
-                cursor.updateRow(row)
-            if row[0].rfind('/') > 0:
-                thats=row[0].rfind('/')
-                that1= thats+1
-                theother=len(row[0])
-                ok=row[0][that1:theother]
-                ok2=ok.strip()
-                these=row[0].replace(str(that1),'')
-                row[1] = ok2
-                cursor.updateRow(row)                        
-    del cursor
+####------------------------MoNat Dimension Text--------------------- ----------- 
+#    shpName = "DimMoNatTextUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
+#    keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+###------------------------Marker Ball--------------------- ----------- 
+#    shpName = "MarkerBallUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
+#    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','LOCATION3','INSTALL_DATE','INSTALLED_ON',\
+#                'OWNER','MARKERTYPE', 'SUBTYPECD','FULLTEXT']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+###------------------------MoNat Dimension Line--------------------- ----------- 
+#    shpName = "DimLineMoNatUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimLine'
+#    keepList = ['OWNER']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#
+###------------------------Distribution Main Dimension--------------------- ----------- 
+#    shpName = "DistributionMainDimUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMainDimension'
+#    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)     
+#    
+###------------------------Service Points--------------------------- ----------- 
+#    shpName = "ServicePointUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
+#    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
+#                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#
+###------------------------Test Points--------------------------- ----------- 
+#    shpName = "AnodeUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
+#    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','LEADCOLOR','LEADDIRECTION','BOXTYPE',\
+#                'STATIONTYPE','LOCATIONDESCRIPTION','SYMBOLROTATION','SUBTYPECD',\
+#                'OPERATINGPRESSURE','LOCATION1MX','LOCATION2MX','ADDITIONALINFO',\
+#                'CPSIZE','HOUSENUM','STREETNAME']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)     
+#    
+###------------------------Ctrl Fittings--------------------------- ----------- 
+#    shpName = "ControllableFittingUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ControllableFitting'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)  
+#
+###------------------------nON-Ctrl Fittings--------------------------- ----------- 
+#    shpName = "NonControllableFittingMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.NonControllableFitting'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+###------------------------abandoned Services--------------------------- ----------- 
+#    shpName = "AbandonedGasServiceUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasService'
+#    keepList = ['SUBTYPECD','NOMINALDIAMETER','MATERIAL','FIELDBOOKPATH',\
+#                'MXSTREETADDRESS','MXTEELOCATION','MXCURBBOXLOCATION',\
+#                'MXCURBDESCRIPTION','MXSERVICELOCATION','MXRISERLOCATION',\
+#                'MXRISERDESCRIPTION','MXMAINLOCATION','MXMAINSIZE','MXMAINMATERIAL',\
+#                'DATECREATED','DATEMODIFIED','OPERATINGPRESSURE','STREETNUMBER',\
+#                'STREETNAME','STREETSUFFIX','ONE_HUNDRED_FOOT_DISPLAY','REASON']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+###------------------------Valves--------------------------- ----------- 
+#    shpName = "GasValveMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
+#                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
+#                'MATERIAL','MATERIALMX','VALVEDIAMETER','VALVETYPE','VALVEUSE',\
+#                'CLOCKWISETOCLOSE','NORMALPOSITION','NONESSENTIAL','NUMBEROFTURNS',\
+#                'VALVENUMBER','VALVELOCATION1','VALVELOCATION2','VALVELOCATION3',\
+#                'FITTINGNUMBER']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+###------------------------Drips--------------------------- ----------- 
+#    shpName = "DripMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Drip'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
+#                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
+#                'MATERIAL','DRIPTYPE','CONNECTYPE','OFFSET']
+#    copyFeature(shpName,sdeMOE,keepList,inputFC)
+#    
+####------------------------Distribution Main----------------------- -----------
+#    ## Distribution main is unique and requires more manipulation to produce. 
+#    shpName = "DistributionMainUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+#    keepList = ['MXLOCATION','NOMINALDIAMETER','JOINTTRENCH','DATEINSTALLED',\
+#                'LENGTHMX','MATERIALMX','MATERIAL','FIELDBOOKPATH',\
+#                'OPERATINGPRESSURE','COATINGTYPE','RELAYEDSIZE','RELAYEDMATERIAL']
+#    # Distribution main that belongs to Spire is the only main we want for the 
+#    # final SHP. This sql expression helps to secure that.
+#    sqlQ=r"NOT OWNER in ( 'Southern Star', 'MRT') AND NOT OWNER IS NULL"
+#    copyFeature(shpName, sdeMOE, keepList, inputFC, sqlQ)
+#    
+#    # Set the workspace to the shapefile folder 
+#    arcpy.env.workspace = shpPath
+#    # Add a new field for FieldNote to the newly created shapefile
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")
+#    # Iterate through the newly created field and FIELDBOOKP                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
+#        for row in cursor:
+#            # This sets any blank or null fieldbookpaths to none
+#            if row[0] == " " or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#            if row[0].rfind('\\') > 0:
+#                # Find the exact location of last \\
+#                slashes=row[0].rfind('\\')
+#                # Add one to the location of the start, to keep everything after the first \
+#                slashIndx= slashes+1
+#                # Count the total length of string
+#                charCount=len(row[0])
+#                # 
+#                ok=row[0][slashIndx:charCount]
+#                # Strip out everything before the last \ and store the remainder in a variable
+#                ok2 = ok.strip()
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#            if row[0].rfind('/') > 0:
+#                thats=row[0].rfind('/')
+#                that1= thats+1
+#                theother=len(row[0])
+#                ok=row[0][that1:theother]
+#                ok2=ok.strip()
+#                these=row[0].replace(str(that1),'')
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#    # Clean up the cursor object                        
+#    del cursor
+####-----------------------------Create Main PDF Folder-------------------------
+#    # Copy pdfs of field books modified in the last 14 days.
+#    # Set current date variable
+#    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
+#    # set date variable 14 days back from current d ate
+#    d = datetime.date.today() - datetime.timedelta(days=14)
+#    # Set a sql query using dates
+#    query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
+#
+##   Set the workspace to the new pdf folder.
+#    arcpy.env.workspace = USICpdf
+#    
+#    # Create a list of any existing pdfs. If present, delete them.
+#    for csv_file in (arcpy.ListFiles("*.pdf") or []):
+#        print("Deleting existing PDFs.")
+#        os.remove(USICpdf+"\\"+csv_file)
+#
+#    # Create a search cursor for the feature layer
+#    # for each row in the cursor based on the time query
+#    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATEINSTAL'], query) as cursor:
+#        print("Searching for PDFs.")
+#        for row in cursor:
+#            print row[0]
+##            print row[1]
+#            if row[0] <> 'None' and arcpy.Exists(row[0]):
+#                shutil.copy2(row[0], USICpdf)
+#            else:
+#                print("Row is blank.")
+#    del cursor
+#    # Delete the fieldbook path as its no longer needed
+#    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
+#    
+##------------------------Services----------------------- ---------------------
+#    shpName = "ServiceUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+#    keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
+#                'BRANCHTYPE','SERVICENUMBER','FIELDBOOKPATH','TEELOCATION',\
+#                'TEEDESCRIPTION','CURBBOXLOCATION','SERVICELOCATION',\
+#                'RISERLOCATION','RISERDESCRIPTION','MAINLOCATION','MAINDEPTH',\
+#                'MAINSIZE','MAINMATERIAL','EFV','SUBTYPECD','MXLOCATION']
+#    sqlQ=r"(NOT FIELDBOOKPATH IS null AND NOT FIELDBOOKPATH = 'NO FIELDBOOK' ) OR( OWNER = 'MoNat')"
+#    copyFeature(shpName, sdeMOE, keepList, inputFC, sqlQ)
+#    
+#    arcpy.env.workspace = shpPath
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
+#        for row in cursor:
+#            if row[0] == " " or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#            if row[0].rfind('\\') > 0:
+#                # Find the exact location of last \\
+#                slashes=row[0].rfind('\\')
+#                # Add one to the location of the start, to keep everything after the first \
+#                slashIndx= slashes+1
+#                # Count the total length of string
+#                charCount=len(row[0])
+#                # 
+#                ok=row[0][slashIndx:charCount]
+#                # Strip out everything before the last \ and store the remainder in a variable
+#                ok2 = ok.strip()
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#            if row[0].rfind('/') > 0:
+#                thats=row[0].rfind('/')
+#                that1= thats+1
+#                theother=len(row[0])
+#                ok=row[0][that1:theother]
+#                ok2=ok.strip()
+#                these=row[0].replace(str(that1),'')
+#                row[1] = ok2
+#                cursor.updateRow(row)                        
+#    del cursor
+####-----------------------------Create Service PDFs-------------------------
+#    # Copy pdfs of field books modified in the last 14 days.
+#    # Set current date variable
+#    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
+#    # set date variable 14 days back from current d ate
+#    d = datetime.date.today() - datetime.timedelta(days=14)
+#    # Set a sql query using dates
+#    query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
+#
+##   Set the workspace to the new pdf folder.
+#    arcpy.env.workspace = USICpdf
+#            
+#    # Create a search cursor for the feature layer
+#    # for each row in the cursor based on the time query
+#    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATECREATE'], query) as cursor:
+#        print("Searching for PDFs.")
+#        for row in cursor:
+#            print row[0]
+##            print row[1]
+#            if row[0] != 'NO FIELDBOOK' and arcpy.Exists(row[0]):
+#                print("Creating a pdf for {0}.".format(row[0]))
+#                shutil.copy2(row[0], USICpdf)
+#            elif row[0].find(r'\\gisappser2\images') > 0 and row[0] != 'NO FIELDBOOK'and row[0] != r'\\gisappser2\images\Laclede Gas\pdf\pdf 2B checked\Laclede\1643-75.pdf':
+#                print("PDF found in images.")
+#                shutil.copy2(row[0], USICpdf)                
+#            else:
+#                print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
+#    del row, cursor
+#    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
+####-----------------------------Abandoned Main-------------------------    
+#    shpName = "AbandonedGasPipeUSICMoEast"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasPipe'
+#    keepList = ['OWNER','DATECREATED','DATEMODIFIED','RETIREDATE','REASON',\
+#                'FIELDBOOKPATH','MATERIALMX','NOMINALDIAMETER','MATERIAL',\
+#                'WORKREQUESTID','OPERATINGPRESSURE','JOINTTRENCH','DATEINSTALLED',\
+#                'COATINGTYPE','MAINTYPE','COUNTY']
+#    copyFeature(shpName, sdeMOE, keepList, inputFC)
+#    
+#    arcpy.env.workspace = shpPath
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
+#        for row in cursor:
+#            if row[0] == " " or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#            if row[0].rfind('\\') > 0:
+#                # Find the exact location of last \\
+#                slashes=row[0].rfind('\\')
+#                # Add one to the location of the start, to keep everything after the first \
+#                slashIndx= slashes+1
+#                # Count the total length of string
+#                charCount=len(row[0])
+#                # 
+#                ok=row[0][slashIndx:charCount]
+#                # Strip out everything before the last \ and store the remainder in a variable
+#                ok2 = ok.strip()
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#            if row[0].rfind('/') > 0:
+#                thats=row[0].rfind('/')
+#                that1= thats+1
+#                theother=len(row[0])
+#                ok=row[0][that1:theother]
+#                ok2=ok.strip()
+#                these=row[0].replace(str(that1),'')
+#                row[1] = ok2
+#                cursor.updateRow(row)                        
+#    del cursor
 ##------------------------Wo Polygons--------------------------- -----------
     shpName = "WorkOrderUSIC"
     inputFC = sdeMOEPoly.getOutput(0) + '\MXSPAT.WOPoly'
@@ -746,331 +747,355 @@ try:
                 'ACTFINISH']
     sqlQ = r"STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW', 'WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
     copyFeature(shpName, sdeMOEPoly, keepList, inputFC, sqlQ)
-    arcpy.env.workspace = shpPath
+    
+    # Geographic transformations not working on Production folder.
+    # Solution: Conduct the Projection work in the new folder on C-Drive
+    # Then copy the resulting projected shapefile to where it should be.
+    # Create temporary projection path
+    tempProjPath = r"C:\TempUSIC"
+    if not os.path.exists(tempProjPath):
+        os.mkdir(tempProjPath)
+        print("Path does not exist for temporary projection. A directory has been created at {0}.".format(tempProjPath))
+    # Set projection shapefile name
     projSHP = shpName + "Proj.shp"
-    print("Projecting {0} to {1}.".format(newSHP, projSHP))
-    arcpy.Project_management(newSHP,projSHP,\
+    # Set path for projected name
+    projPath = os.path.join(tempProjPath, projSHP)
+    
+    tempSHP = arcpy.conversion.FeatureClassToFeatureClass(inputFC, tempProjPath, shpName,\
+                                                sqlQ, fmap)
+    
+    # Project the shapefile
+    projFile = arcpy.Project_management(tempSHP,projPath,\
                              "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
                              "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
                              "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
-    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
-    arcpy.Delete_management(newSHP)
-############################   MISSOURI WEST    ###############################      
-#------------------------Marker Ball--------------------- ----------- 
-    shpName = "MarkerBallUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
-    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','LOCATION3','INSTALL_DATE','INSTALLED_ON',\
-                'OWNER','MARKERTYPE', 'SUBTYPECD','FULLTEXT']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-##------------------------Drips--------------------------- ----------- 
-    shpName = "Drip"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Drip'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
-                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
-                'MATERIAL','DRIPTYPE','CONNECTYPE','OFFSET']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-    
-##------------------------Distribution Main Dimension-------------------------
-    shpName = "DistributionMainDimUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMainDimension'
-    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)        
- 
-##------------------------Service Points--------------------------- ----------- 
-    shpName = "ServicePointUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
-    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
-                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS'\
-                ,'SERVICEPOINTTYPE','DIVISION','TOWN','SECTOR']   
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-
-    # Add a field for location length stored as a LONG
-    
-    arcpy.AddField_management(newSHP, "LOC", "LONG")
-    expression = "getClass(!SERVICEMXL!)"
-    codeBlock = """def getClass(SERVICEMXL):
-        if 'MGEMAIN' in SERVICEMXL or len(SERVICEMXL) > 9 or SERVICEMXL == ' ':
-            return 0
-        else:
-            return int(SERVICEMXL)"""     
-    arcpy.CalculateField_management(newSHP, "LOC",expression, "PYTHON_9.3", codeBlock)
-
-####------------------------Test Point-------------------------------------- -   
-    shpName = "AnodeUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
-    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
-                'BOXTYPE','LOCATIONDESCRIPTION','CPSIZE','SYMBOLDIRECTION',\
-                'HOUSENUM','SUBTYPECD','STREETNAME','STATIONTYPE','PROTECTING',\
-                'OPERATINGPRESSURE','REASON','LOCATION1MX','LOCATION2MX',\
-                'ADDITIONALINFO','DIVISION','TOWN','SECTOR']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)   
-    
-####------------------------Rectifier-------------------------------------- --    
-    shpName = "RectifierUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPRectifier'
-    keepList = ['SUBTYPECD','DIVISION','TOWN','SECTOR','COMMENTS','FACILITYID',\
-                'SYMBOLROTATION']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-####------------------------ga fITTINGlINE------------------------------------   
-    shpName = "GAFittingLineUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GA_FittingLine'
-    keepList = ['DETAIL','FID_LEGACY']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-####------------------------GA Fitting Text-----------------------------------   
-    shpName = "GAFittingTextUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GA_FittingText'
-    keepList = ['SUBTYPECD','DIVISION','TOWN','SECTOR','COMMENTS','FACILITYID',\
-                'SYMBOLROTATION']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-####------------------------Controllable Fittings-----------------------------     
-    shpName = "ControllableFittingUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ControllableFitting'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION',\
-                'DIVISION','TOWN','SECTOR']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-####------------------------Non-Controllable Fittings-----------------------------    
-    shpName = "NonControllableFittingUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.NonControllableFitting'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION',\
-                'DIVISION','TOWN','SECTOR','COVER','COMMENTS','STYLE']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-    
-##------------------------Wo Polygons--------------------------- -----------
-    shpName = "WorkOrderUSIC"
-    inputFC = sdeMOWPoly.getOutput(0) + '\MXSPAT.WOPoly'
-    keepList = ['STATUS','MXWONUM','WORKTYPE','DESCRIPTION','ZLAC_SUBWORKTYPE',\
-                'ACTFINISH']
-    sqlQ = "STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW','WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
-    copyFeature(shpName, sdeMOWPoly, keepList, inputFC, sqlQ)
-    arcpy.env.workspace = shpPath
-    projSHP = shpName + "Proj.shp"
-    print("Projecting {0} to {1}.".format(newSHP, projSHP))
-    arcpy.Project_management(newSHP,projSHP,\
-                             "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
-                             "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
-                             "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
-    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
-    arcpy.Delete_management(newSHP)
-##------------------------Map Grid--------------------------- -----------    
-    shpName = "MapGrid"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MapGrid'
-    keepList = ['MAPID100','COUNTY','DISTRICT','DIVISION','TOWN','SECTOR']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-##------------------------Valves----------------------------------------------- 
-    shpName = "GasValve"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
-    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
-                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
-                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
-                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
-                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
-                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
-                'MATERIAL','MATERIALMX','VALVEDIAMETER','VALVETYPE','VALVEUSE',\
-                'CLOCKWISETOCLOSE','NORMALPOSITION','NONESSENTIAL','NUMBEROFTURNS',\
-                'VALVENUMBER','VALVELOCATION1','VALVELOCATION2','VALVELOCATION3',\
-                'FITTINGNUMBER','TOWN','DIVISION','SECTOR']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)  
-    
-###-----------------------------Abandoned Main---------------------------------    
-    shpName = "AbandonedGasPipeUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasPipe'
-    keepList = ['OWNER','DATECREATED','DATEMODIFIED','RETIREDATE','REASON',\
-                'FIELDBOOKPATH','MATERIALMX','NOMINALDIAMETER','MATERIAL',\
-                'WORKREQUESTID','OPERATINGPRESSURE','JOINTTRENCH','DATEINSTALLED',\
-                'COATINGTYPE','MAINTYPE','COUNTY', 'DIVISION','TOWN','SECTOR']
-    copyFeature(shpName, sdeMOW, keepList, inputFC)
-    
-    arcpy.env.workspace = shpPath
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
-        for row in cursor:
-            if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-        del row, cursor
-  
-##------------------------abandoned Services--------------------------- ----------- 
-    shpName = "AbandonedGasServiceUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasService'
-    keepList = ['SUBTYPECD','NOMINALDIAMETER','MATERIAL','FIELDBOOKPATH',\
-                'MXSTREETADDRESS','MXTEELOCATION','MXCURBBOXLOCATION',\
-                'MXCURBDESCRIPTION','MXSERVICELOCATION','MXRISERLOCATION',\
-                'MXRISERDESCRIPTION','MXMAINLOCATION','MXMAINSIZE','MXMAINMATERIAL',\
-                'DATECREATED','DATEMODIFIED','OPERATINGPRESSURE','STREETNUMBER',\
-                'STREETNAME','STREETSUFFIX','ONE_HUNDRED_FOOT_DISPLAY','REASON'\
-                'DIVISION','TOWN','SECTOR']
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-    
-##------------------------Services---------------------------------------------
-    shpName = "ServiceUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
-    keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
-                'BRANCHTYPE','SERVICENUMBER','FIELDBOOKPATH','TEELOCATION',\
-                'TEEDESCRIPTION','CURBBOXLOCATION','SERVICELOCATION',\
-                'RISERLOCATION','RISERDESCRIPTION','MAINLOCATION','MAINDEPTH',\
-                'MAINSIZE','MAINMATERIAL','EFV','SUBTYPECD','MXLOCATION',\
-                'DIVISION','TOWN','SECTOR']
-    sqlQ=("NOT FIELDBOOKPATH = 'NO FIELDBOOK'  OR OWNER = 'MoNat'")
-    copyFeature(shpName, sdeMOW, keepList, inputFC, sqlQ)
-    
-    arcpy.env.workspace = shpPath
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
-        for row in cursor:
-            if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-            if row[0].rfind('\\') > 0:
-                # Find the exact location of last \\
-                slashes=row[0].rfind('\\')
-                # Add one to the location of the start, to keep everything after the first \
-                slashIndx= slashes+1
-                # Count the total length of string
-                charCount=len(row[0])
-                # 
-                ok=row[0][slashIndx:charCount]
-                # Strip out everything before the last \ and store the remainder in a variable
-                ok2 = ok.strip()
-                row[1] = ok2
-                cursor.updateRow(row)
-            if row[0].rfind('/') > 0:
-                thats=row[0].rfind('/')
-                that1= thats+1
-                theother=len(row[0])
-                ok=row[0][that1:theother]
-                ok2=ok.strip()
-                these=row[0].replace(str(that1),'')
-                row[1] = ok2
-                cursor.updateRow(row)                        
-    del cursor
-
-###-----------------------------Create Service PDFs-------------------------
-    # Copy pdfs of field books modified in the last 14 days.
-    # Set current date variable
-    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
-    # set date variable 14 days back from current d ate
-    d = datetime.date.today() - datetime.timedelta(days=14)
-    # Set a sql query using dates
-    query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
-
-#   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
-    
-    # Create a list of any existing pdfs. If present, delete them.
-    for csv_file in (arcpy.ListFiles("*.pdf") or []):
-        print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
-        
-    # Create a search cursor for the feature layer
-    # for each row in the cursor based on the time query
-    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATECREATE'], query) as cursor:
-        print("Searching for PDFs.")
-        for row in cursor:
-            print row[0]
-#            print row[1]
-            if row[0] != 'None' and arcpy.Exists(row[0]):
-                print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)          
-            else:
-                print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
-    del row, cursor
-    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
    
-##------------------------Distribution Main----------------------- ---------------------
-    shpName = "DistributionMainUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
-    keepList = ['MXLOCATION','NOMINALDIAMETER','JOINTTRENCH','DATEINSTALLED',\
-                'LENGTHMX','MATERIALMX','MATERIAL','FIELDBOOKPATH',\
-                'OPERATINGPRESSURE','COATINGTYPE','RELAYEDSIZE','RELAYEDMATERIAL',\
-                'MAOP','MOP','DIVISION','TOWN','SECTOR','WORKORDERNUMBER']
-    sqlQ=("NOT DATEINSTALLED IS NULL AND NOT MXLOCATION = 'GMN001422772'" )
-    copyFeature(shpName, sdeMOW, keepList, inputFC, sqlQ)
+    # Copy the newly projected shapefile back to the production folder
+    arcpy.FeatureClassToFeatureClass_conversion(projFile, shpPath, projSHP)
+    print("Copying projection file {0} back to the production folder at {1}.".format(projFile, shpPath))
     
-    arcpy.env.workspace = shpPath
-    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
-                              "NULLABLE","NON_REQUIRED","#")
-    print("New field created for FieldNote.")                          
-    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote', 'DATEINSTAL',\
-                                        'WORKORDERN']) as cursor:
-        for row in cursor:
-            if row[0].strip() == "" or row[0] is None:
-#                print("Row being updated from blank to None.")
-                none = "None"
-                row[0] = none
-                cursor.updateRow(row)
-            if row[0].rfind('\\') > 0:
-                # Find the exact location of last \\
-                slashes=row[0].rfind('\\')
-                # Add one to the location of the start, to keep everything after the first \
-                slashIndx= slashes+1
-                # Count the total length of string
-                charCount=len(row[0])
-                # 
-                ok=row[0][slashIndx:charCount]
-                # Strip out everything before the last \ and store the remainder in a variable
-                ok2 = ok.strip()
-                row[1] = ok2
-                cursor.updateRow(row)
-            if row[0].rfind('/') > 0:
-                thats=row[0].rfind('/')
-                that1= thats+1
-                theother=len(row[0])
-                ok=row[0][that1:theother]
-                ok2=ok.strip()
-                these=row[0].replace(str(that1),'')
-                row[1] = ok2
-                cursor.updateRow(row)                        
-    del cursor
-
-###-----------------------------Create Distribution Main PDFs-------------------------
-    # Copy pdfs of field books modified in the last 14 days.
-    # Set current date variable
-    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
-    # set date variable 14 days back from current d ate
-    d = datetime.date.today() - datetime.timedelta(days=14)
-    # Set a sql query using dates
-    query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
-
-#   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
-            
-    # Create a search cursor for the feature layer
-    # for each row in the cursor based on the time query
-    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP'], query) as cursor:
-        print("Searching for PDFs.")
-        for row in cursor:
-            print row[0]
-            if row[0] != 'None' and arcpy.Exists(row[0]):
-                print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)              
-            else:
-                print("PDF does not exist.")
-    del row, cursor 
-    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
+#    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
+#    arcpy.Delete_management(newSHP)
+    # Delete the temporary projection path
+    del tempProjPath
+    
+#############################   MISSOURI WEST    ###############################      
+##------------------------Marker Ball--------------------- ----------- 
+#    shpName = "MarkerBallUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
+#    keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','LOCATION3','INSTALL_DATE','INSTALLED_ON',\
+#                'OWNER','MARKERTYPE', 'SUBTYPECD','FULLTEXT']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+###------------------------Drips--------------------------- ----------- 
+#    shpName = "Drip"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Drip'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
+#                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
+#                'MATERIAL','DRIPTYPE','CONNECTYPE','OFFSET']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#    
+###------------------------Distribution Main Dimension-------------------------
+#    shpName = "DistributionMainDimUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMainDimension'
+#    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)        
+# 
+###------------------------Service Points--------------------------- ----------- 
+#    shpName = "ServicePointUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
+#    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
+#                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS'\
+#                ,'SERVICEPOINTTYPE','DIVISION','TOWN','SECTOR']   
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#
+#    # Add a field for location length stored as a LONG
+#    
+#    arcpy.AddField_management(newSHP, "LOC", "LONG")
+#    expression = "getClass(!SERVICEMXL!)"
+#    codeBlock = """def getClass(SERVICEMXL):
+#        if 'MGEMAIN' in SERVICEMXL or len(SERVICEMXL) > 9 or SERVICEMXL == ' ':
+#            return 0
+#        else:
+#            return int(SERVICEMXL)"""     
+#    arcpy.CalculateField_management(newSHP, "LOC",expression, "PYTHON_9.3", codeBlock)
+#
+#####------------------------Test Point-------------------------------------- -   
+#    shpName = "AnodeUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
+#    keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','LEADCOLOR','PROTECTIONDIRECTION',\
+#                'BOXTYPE','LOCATIONDESCRIPTION','CPSIZE','SYMBOLDIRECTION',\
+#                'HOUSENUM','SUBTYPECD','STREETNAME','STATIONTYPE','PROTECTING',\
+#                'OPERATINGPRESSURE','REASON','LOCATION1MX','LOCATION2MX',\
+#                'ADDITIONALINFO','DIVISION','TOWN','SECTOR']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)   
+#    
+#####------------------------Rectifier-------------------------------------- --    
+#    shpName = "RectifierUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPRectifier'
+#    keepList = ['SUBTYPECD','DIVISION','TOWN','SECTOR','COMMENTS','FACILITYID',\
+#                'SYMBOLROTATION']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#####------------------------ga fITTINGlINE------------------------------------   
+#    shpName = "GAFittingLineUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GA_FittingLine'
+#    keepList = ['DETAIL','FID_LEGACY']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#####------------------------GA Fitting Text-----------------------------------   
+#    shpName = "GAFittingTextUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GA_FittingText'
+#    keepList = ['SUBTYPECD','DIVISION','TOWN','SECTOR','COMMENTS','FACILITYID',\
+#                'SYMBOLROTATION']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#####------------------------Controllable Fittings-----------------------------     
+#    shpName = "ControllableFittingUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ControllableFitting'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION',\
+#                'DIVISION','TOWN','SECTOR']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#####------------------------Non-Controllable Fittings-----------------------------    
+#    shpName = "NonControllableFittingUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.NonControllableFitting'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION',\
+#                'DIVISION','TOWN','SECTOR','COVER','COMMENTS','STYLE']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#    
+###------------------------Wo Polygons--------------------------- -----------
+#    shpName = "WorkOrderUSIC"
+#    inputFC = sdeMOWPoly.getOutput(0) + '\MXSPAT.WOPoly'
+#    keepList = ['STATUS','MXWONUM','WORKTYPE','DESCRIPTION','ZLAC_SUBWORKTYPE',\
+#                'ACTFINISH']
+#    sqlQ = "STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW','WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
+#    copyFeature(shpName, sdeMOWPoly, keepList, inputFC, sqlQ)
+#    arcpy.env.workspace = shpPath
+#    
+#    projSHP = shpName + "Proj.shp"
+#    print("Projecting {0} to {1}.".format(newSHP, projSHP))
+#    arcpy.Project_management(newSHP,projSHP,\
+#                             "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
+#                             "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
+#                             "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
+#    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
+#    arcpy.Delete_management(newSHP)
+###------------------------Map Grid--------------------------- -----------    
+#    shpName = "MapGrid"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MapGrid'
+#    keepList = ['MAPID100','COUNTY','DISTRICT','DIVISION','TOWN','SECTOR']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+###------------------------Valves----------------------------------------------- 
+#    shpName = "GasValve"
+#    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
+#    keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
+#                'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
+#                'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
+#                'BUILDING1','STREET1','DISTANCE2','DIRECTION2','LOCATION2',\
+#                'BUILDING2','STREET2','SUBTYPECD','COVER','SYMBOLROTATION'\
+#                'DIRECTION1MX','DIRECTION2MX','MXLOCATION','COVER','SUBTYPECD','COMMENTS',\
+#                'MATERIAL','MATERIALMX','VALVEDIAMETER','VALVETYPE','VALVEUSE',\
+#                'CLOCKWISETOCLOSE','NORMALPOSITION','NONESSENTIAL','NUMBEROFTURNS',\
+#                'VALVENUMBER','VALVELOCATION1','VALVELOCATION2','VALVELOCATION3',\
+#                'FITTINGNUMBER','TOWN','DIVISION','SECTOR']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)  
+#    
+####-----------------------------Abandoned Main---------------------------------    
+#    shpName = "AbandonedGasPipeUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasPipe'
+#    keepList = ['OWNER','DATECREATED','DATEMODIFIED','RETIREDATE','REASON',\
+#                'FIELDBOOKPATH','MATERIALMX','NOMINALDIAMETER','MATERIAL',\
+#                'WORKREQUESTID','OPERATINGPRESSURE','JOINTTRENCH','DATEINSTALLED',\
+#                'COATINGTYPE','MAINTYPE','COUNTY', 'DIVISION','TOWN','SECTOR']
+#    copyFeature(shpName, sdeMOW, keepList, inputFC)
+#    
+#    arcpy.env.workspace = shpPath
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
+#        for row in cursor:
+#            if row[0] == " " or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#        del row, cursor
+#  
+###------------------------abandoned Services--------------------------- ----------- 
+#    shpName = "AbandonedGasServiceUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasService'
+#    keepList = ['SUBTYPECD','NOMINALDIAMETER','MATERIAL','FIELDBOOKPATH',\
+#                'MXSTREETADDRESS','MXTEELOCATION','MXCURBBOXLOCATION',\
+#                'MXCURBDESCRIPTION','MXSERVICELOCATION','MXRISERLOCATION',\
+#                'MXRISERDESCRIPTION','MXMAINLOCATION','MXMAINSIZE','MXMAINMATERIAL',\
+#                'DATECREATED','DATEMODIFIED','OPERATINGPRESSURE','STREETNUMBER',\
+#                'STREETNAME','STREETSUFFIX','ONE_HUNDRED_FOOT_DISPLAY','REASON'\
+#                'DIVISION','TOWN','SECTOR']
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
+#    
+###------------------------Services---------------------------------------------
+#    shpName = "ServiceUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+#    keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
+#                'BRANCHTYPE','SERVICENUMBER','FIELDBOOKPATH','TEELOCATION',\
+#                'TEEDESCRIPTION','CURBBOXLOCATION','SERVICELOCATION',\
+#                'RISERLOCATION','RISERDESCRIPTION','MAINLOCATION','MAINDEPTH',\
+#                'MAINSIZE','MAINMATERIAL','EFV','SUBTYPECD','MXLOCATION',\
+#                'DIVISION','TOWN','SECTOR']
+#    sqlQ=("NOT FIELDBOOKPATH = 'NO FIELDBOOK'  OR OWNER = 'MoNat'")
+#    copyFeature(shpName, sdeMOW, keepList, inputFC, sqlQ)
+#    
+#    arcpy.env.workspace = shpPath
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
+#        for row in cursor:
+#            if row[0] == " " or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#            if row[0].rfind('\\') > 0:
+#                # Find the exact location of last \\
+#                slashes=row[0].rfind('\\')
+#                # Add one to the location of the start, to keep everything after the first \
+#                slashIndx= slashes+1
+#                # Count the total length of string
+#                charCount=len(row[0])
+#                # 
+#                ok=row[0][slashIndx:charCount]
+#                # Strip out everything before the last \ and store the remainder in a variable
+#                ok2 = ok.strip()
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#            if row[0].rfind('/') > 0:
+#                thats=row[0].rfind('/')
+#                that1= thats+1
+#                theother=len(row[0])
+#                ok=row[0][that1:theother]
+#                ok2=ok.strip()
+#                these=row[0].replace(str(that1),'')
+#                row[1] = ok2
+#                cursor.updateRow(row)                        
+#    del cursor
+#
+####-----------------------------Create Service PDFs-------------------------
+#    # Copy pdfs of field books modified in the last 14 days.
+#    # Set current date variable
+#    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
+#    # set date variable 14 days back from current d ate
+#    d = datetime.date.today() - datetime.timedelta(days=14)
+#    # Set a sql query using dates
+#    query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
+#
+##   Set the workspace to the new pdf folder.
+#    arcpy.env.workspace = USICpdf
+#    
+#    # Create a list of any existing pdfs. If present, delete them.
+#    for csv_file in (arcpy.ListFiles("*.pdf") or []):
+#        print("Deleting existing PDFs.")
+#        os.remove(USICpdf+"\\"+csv_file)
+#        
+#    # Create a search cursor for the feature layer
+#    # for each row in the cursor based on the time query
+#    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP', 'DATECREATE'], query) as cursor:
+#        print("Searching for PDFs.")
+#        for row in cursor:
+#            print row[0]
+##            print row[1]
+#            if row[0] != 'None' and arcpy.Exists(row[0]):
+#                print("Creating a pdf for {0}.".format(row[0]))
+#                shutil.copy2(row[0], USICpdf)          
+#            else:
+#                print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
+#    del row, cursor
+#    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
+#   
+###------------------------Distribution Main----------------------- ---------------------
+#    shpName = "DistributionMainUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+#    keepList = ['MXLOCATION','NOMINALDIAMETER','JOINTTRENCH','DATEINSTALLED',\
+#                'LENGTHMX','MATERIALMX','MATERIAL','FIELDBOOKPATH',\
+#                'OPERATINGPRESSURE','COATINGTYPE','RELAYEDSIZE','RELAYEDMATERIAL',\
+#                'MAOP','MOP','DIVISION','TOWN','SECTOR','WORKORDERNUMBER']
+#    sqlQ=("NOT DATEINSTALLED IS NULL AND NOT MXLOCATION = 'GMN001422772'" )
+#    copyFeature(shpName, sdeMOW, keepList, inputFC, sqlQ)
+#    
+#    arcpy.env.workspace = shpPath
+#    arcpy.AddField_management(newSHP,"FieldNote","TEXT","#","#","200","#",\
+#                              "NULLABLE","NON_REQUIRED","#")
+#    print("New field created for FieldNote.")                          
+#    with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote', 'DATEINSTAL',\
+#                                        'WORKORDERN']) as cursor:
+#        for row in cursor:
+#            if row[0].strip() == "" or row[0] is None:
+##                print("Row being updated from blank to None.")
+#                none = "None"
+#                row[0] = none
+#                cursor.updateRow(row)
+#            if row[0].rfind('\\') > 0:
+#                # Find the exact location of last \\
+#                slashes=row[0].rfind('\\')
+#                # Add one to the location of the start, to keep everything after the first \
+#                slashIndx= slashes+1
+#                # Count the total length of string
+#                charCount=len(row[0])
+#                # 
+#                ok=row[0][slashIndx:charCount]
+#                # Strip out everything before the last \ and store the remainder in a variable
+#                ok2 = ok.strip()
+#                row[1] = ok2
+#                cursor.updateRow(row)
+#            if row[0].rfind('/') > 0:
+#                thats=row[0].rfind('/')
+#                that1= thats+1
+#                theother=len(row[0])
+#                ok=row[0][that1:theother]
+#                ok2=ok.strip()
+#                these=row[0].replace(str(that1),'')
+#                row[1] = ok2
+#                cursor.updateRow(row)                        
+#    del cursor
+#
+####-----------------------------Create Distribution Main PDFs-------------------------
+#    # Copy pdfs of field books modified in the last 14 days.
+#    # Set current date variable
+#    CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
+#    # set date variable 14 days back from current d ate
+#    d = datetime.date.today() - datetime.timedelta(days=14)
+#    # Set a sql query using dates
+#    query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
+#
+##   Set the workspace to the new pdf folder.
+#    arcpy.env.workspace = USICpdf
+#            
+#    # Create a search cursor for the feature layer
+#    # for each row in the cursor based on the time query
+#    with arcpy.da.SearchCursor(newSHP, ['FIELDBOOKP'], query) as cursor:
+#        print("Searching for PDFs.")
+#        for row in cursor:
+#            print row[0]
+#            if row[0] != 'None' and arcpy.Exists(row[0]):
+#                print("Creating a pdf for {0}.".format(row[0]))
+#                shutil.copy2(row[0], USICpdf)              
+#            else:
+#                print("PDF does not exist.")
+#    del row, cursor 
+#    arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
     
     #Clean up the temp SDE connection
     arcpy.env.workspace = ""
@@ -1093,4 +1118,12 @@ except:
     log.write("" + pymsg + "\n")
     log.write("" + msgs + "")
     print(msgs)
-    log.close() 
+    log.close()
+    #Clean up the temp SDE connection
+    arcpy.env.workspace = ""
+    print("Removing temporary SDE Connection Files.")
+    os.remove(sdeAL.getOutput(0))
+    os.remove(sdeMOE.getOutput(0))
+    os.remove(sdeMOW.getOutput(0))
+    os.remove(sdeMOEPoly.getOutput(0))
+    os.remove(sdeMOWPoly.getOutput(0))
