@@ -70,7 +70,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     if sdeConnect == sdeAL:
         print("Connecting to the {0} SDE.".format(paths[0]))
         shpPath = os.path.join(setPath, paths[0])
-        USICpdfPath = paths[1] + pdfN
+        USICpdfPath = paths[0] + pdfN
         USICpdf = os.path.join(sdeTempPath, USICpdfPath)
     elif sdeConnect == sdeMOE or sdeConnect == sdeMOEPoly:
         shpPath = os.path.join(setPath, paths[1])
