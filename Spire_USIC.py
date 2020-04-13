@@ -56,39 +56,29 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
              fmap.removeFieldMap(fmap.findFieldMapIndex(fname))
     # A list of current Spire USIC Directories and areas
     paths = ['SpireAL','MOEast','MoWest']
-    # Set the pdf pathway
-    pdfN="_FieldNotePDF"   
     # Set variable to the path declared in script
     # TO CHANGE WHAT DIRECTORY THIS CREATES THE BASE FILES IN, POINT THIS 
     # VARIABLE TO DESIRED DIRECTORY.
     setPath = r"\\pdatfile01\ProdData\GIS\USIC"
     # Global variables for the folder directories are created for use outside
     # the function
-    global shpPath,USICpdf
+    global shpPath
     # Determine what SDE is being used and set shpPath to point to a matching
     # directory to store shapefiles in.
     if sdeConnect == sdeAL:
         print("Connecting to the {0} SDE.".format(paths[0]))
         shpPath = os.path.join(setPath, paths[0])
-        USICpdfPath = paths[0] + pdfN
-        USICpdf = os.path.join(sdeTempPath, USICpdfPath)
     elif sdeConnect == sdeMOE or sdeConnect == sdeMOEPoly:
         shpPath = os.path.join(setPath, paths[1])
         print("Connecting to the {0} SDE.".format(paths[1]))
-        USICpdfPath = paths[1] + pdfN
-        USICpdf = os.path.join(sdeTempPath, USICpdfPath)
     elif sdeConnect == sdeMOW or sdeConnect == sdeMOWPoly:
         shpPath = os.path.join(setPath, paths[2])
         print("Connecting to the {0} SDE.".format(paths[2]))
-        USICpdfPath = paths[2] + pdfN
-        USICpdf = os.path.join(sdeTempPath, USICpdfPath)
     # Prior to using the directory, test to see if it exists.
     # If it does not, create a new directory based on that name. 
     if not os.path.exists(shpPath):
         os.mkdir(shpPath)
         print("No folder for shapefiles. A directory has been created at {0}.".format(shpPath))
-    if not os.path.exists(USICpdf):
-        os.mkdir(USICpdf)
     # Delete any existing shapefile to avoid overwrite issues
     doesEx = os.path.join(shpPath, shpName + ".shp")
     if arcpy.Exists(doesEx):
@@ -600,12 +590,12 @@ try:
     query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
 
 #   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
+    arcpy.env.workspace = shpPath
     
     # Create a list of any existing pdfs. If present, delete them.
     for csv_file in (arcpy.ListFiles("*.pdf") or []):
         print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
+        os.remove(shpPath+"\\"+csv_file)
 
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
@@ -615,7 +605,7 @@ try:
             print row[0]
 #            print row[1]
             if row[0] <> 'None' and arcpy.Exists(row[0]):
-                shutil.copy2(row[0], USICpdf)
+                shutil.copy2(row[0], shpPath)
             else:
                 print("Row is blank.")
     del cursor
@@ -677,7 +667,7 @@ try:
     query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
 
 #   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
+    arcpy.env.workspace = shpPath
             
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
@@ -688,10 +678,10 @@ try:
 #            print row[1]
             if row[0] != 'NO FIELDBOOK' and arcpy.Exists(row[0]):
                 print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)
+                shutil.copy2(row[0], shpPath)
             elif row[0].find(r'\\gisappser2\images') > 0 and row[0] != 'NO FIELDBOOK'and row[0] != r'\\gisappser2\images\Laclede Gas\pdf\pdf 2B checked\Laclede\1643-75.pdf':
                 print("PDF found in images.")
-                shutil.copy2(row[0], USICpdf)                
+                shutil.copy2(row[0], shpPath)                
             else:
                 print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
     del row, cursor
@@ -978,12 +968,12 @@ try:
     query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
 
 #   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
+    arcpy.env.workspace = shpPath
     
     # Create a list of any existing pdfs. If present, delete them.
     for csv_file in (arcpy.ListFiles("*.pdf") or []):
         print("Deleting existing PDFs.")
-        os.remove(USICpdf+"\\"+csv_file)
+        os.remove(shpPath+"\\"+csv_file)
         
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
@@ -994,7 +984,7 @@ try:
 #            print row[1]
             if row[0] != 'None' and arcpy.Exists(row[0]):
                 print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)          
+                shutil.copy2(row[0], shpPath)          
             else:
                 print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
     del row, cursor
@@ -1056,7 +1046,7 @@ try:
     query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
 
 #   Set the workspace to the new pdf folder.
-    arcpy.env.workspace = USICpdf
+    arcpy.env.workspace = shpPath
             
     # Create a search cursor for the feature layer
     # for each row in the cursor based on the time query
@@ -1066,7 +1056,7 @@ try:
             print row[0]
             if row[0] != 'None' and arcpy.Exists(row[0]):
                 print("Creating a pdf for {0}.".format(row[0]))
-                shutil.copy2(row[0], USICpdf)              
+                shutil.copy2(row[0], shpPath)              
             else:
                 print("PDF does not exist.")
     del row, cursor 
