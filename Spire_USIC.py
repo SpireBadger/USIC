@@ -1,6 +1,6 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 04/07/2020
+# Last Updated: 04/13/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
@@ -55,7 +55,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
 #             print("Field name {0} is not on the Keep List and will be removed.".format(fname))
              fmap.removeFieldMap(fmap.findFieldMapIndex(fname))
     # A list of current Spire USIC Directories and areas
-    paths = ['SpireAL','SpireMOEast','SpireMoWest']
+    paths = ['SpireAL','MOEast','MoWest']
     # Set the pdf pathway
     pdfN="_FieldNotePDF"   
     # Set variable to the path declared in script
