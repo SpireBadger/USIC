@@ -1,6 +1,6 @@
 # Project: AL to USIC data
 # Create Date: 02/13/2020
-# Last Updated: 03/06/2020
+# Last Updated: 03/24/2020
 # Created by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of the AL GIS data to send to USIC
@@ -97,11 +97,11 @@ try:
     print("Database connection created at {0} to the Alabama Database."\
           .format(sdeTempPath))
 ##----------------------------AL Setup------------------------------------------
-##---------Dimension Text-------------------------------------------------------
-#    shpName = "mainText"
-#    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
-#    keepList = ['TEXTSTRING','ANGLE','FONTSIZE']
-#    copyFeature(shpName,sdeAL,keepList,inputFC)
+#--------- Main Text-------------------------------------------------------
+    shpName = "mainText"
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
+    keepList = ['TEXTSTRING','ANGLE','FONTSIZE']
+    copyFeature(shpName,sdeAL,keepList,inputFC)
     
 
 #---------Distribution Main-------------------------------------------------------
@@ -233,7 +233,7 @@ try:
 
 ##------------------------Service Text--------------------------------- -------   
     shpName = "serviceText"
-    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ServiceText'
+    te
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC) 
     
@@ -305,7 +305,7 @@ try:
     
 ##------------------------Location Description Text------------------------- -------
     shpName = "LocationMeasurement"
-    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.locationMeasurement'
+    inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.LocationMeasurement'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
