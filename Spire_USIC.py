@@ -100,7 +100,7 @@ sys.stdout = Unbuffered(sys.stdout)
 try:
     # set datetime variable
     d = datetime.datetime.now()
-    sdeTempPath = r"C:\TempUSIC"
+    sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
     if not os.path.exists(sdeTempPath):
         os.mkdir(sdeTempPath)
         print("Temporary directory not found. A new directory has been " + \
@@ -110,7 +110,9 @@ try:
 
     # open log file for holding errors
     # will also create file if not already there
-    log = open("C:\TempUSIC\LogFile.txt","a")
+    logName = "LogFile.txt"
+    logPath = os.path.join(sdeTempPath, logName)
+    log = open(logPath,"a")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
     # write datetime to log
