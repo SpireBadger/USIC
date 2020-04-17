@@ -181,7 +181,7 @@ try:
      # sdeAL is used in case the sdeTempPath is changed to limit number of changes needed in the script.
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.MainText'
    # Create a list of all field names to be kept.     
-    keepList = ['TextString', 'FontSize', 'Angle']
+    keepList = ['TEXTSTRING', 'FONTSIZE', 'ANGLE']
    # Run the copyFeature function to create the shapefile.     
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
