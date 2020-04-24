@@ -755,16 +755,15 @@ try:
         os.mkdir(tempProjPath)
         print("Path does not exist for temporary projection. A directory has been created at {0}.".format(tempProjPath))
     # Set projection shapefile name
-    temName = shpName + "Temp.shp"
+    temName = shpName + "Temp"
     projName = shpName + "Proj.shp"
     # Set path for projected name
     temPath = os.path.join(tempProjPath, temName)
     print("Temporary path created at {0}.".format(temPath))
     projPath = os.path.join(tempProjPath, projName)
-    print("The temporary projected file will be called {0}.".format(projPath))
     
-    tempSHP = arcpy.conversion.FeatureClassToFeatureClass(newSHP, temPath, "TemporaryWorkOrderUSIC")
-    print("The production shapefile has been copied to {0} as {1}.".format(temPath, projPath))
+    tempSHP = arcpy.conversion.FeatureClassToFeatureClass(newSHP, tempProjPath, temName)
+    print("The production shapefile has been copied to {0} as {1}.".format(tempProjPath, temPath))
     
     # Project the shapefile
     projFile = arcpy.Project_management(tempSHP,projPath,\
