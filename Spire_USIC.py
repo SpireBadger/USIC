@@ -759,9 +759,12 @@ try:
     projName = shpName + "Proj.shp"
     # Set path for projected name
     temPath = os.path.join(tempProjPath, temName)
+    print("Temporary path created at {0}.".format(temPath))
     projPath = os.path.join(tempProjPath, projName)
+    print("The temporary projected file will be called {0}.".format(projPath))
     
-    tempSHP = arcpy.CopyFeatures_management(newSHP, projName)
+    tempSHP = arcpy.conversion.FeatureClassToFeatureClass(newSHP, temPath, "TemporaryWorkOrderUSIC")
+    print("The production shapefile has been copied to {0} as {1}.".format(temPath, projPath))
     
     # Project the shapefile
     projFile = arcpy.Project_management(tempSHP,projPath,\
@@ -874,14 +877,14 @@ try:
 #                'DIVISION','TOWN','SECTOR','COVER','COMMENTS','STYLE']
 #    copyFeature(shpName,sdeMOW,keepList,inputFC)
 #    
-#------------------------Wo Polygons--------------------------- -----------
-    shpName = "WorkOrderUSIC"
-    inputFC = sdeMOWPoly.getOutput(0) + '\MXSPAT.WOPoly'
-    keepList = ['STATUS','MXWONUM','WORKTYPE','DESCRIPTION','ZLAC_SUBWORKTYPE',\
-                'ACTFINISH']
-    sqlQ = "STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW','WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
-    copyFeature(shpName, sdeMOWPoly, keepList, inputFC, sqlQ)
-    arcpy.env.workspace = shpPath
+##------------------------Wo Polygons--------------------------- -----------
+#    shpName = "WorkOrderUSIC"
+#    inputFC = sdeMOWPoly.getOutput(0) + '\MXSPAT.WOPoly'
+#    keepList = ['STATUS','MXWONUM','WORKTYPE','DESCRIPTION','ZLAC_SUBWORKTYPE',\
+#                'ACTFINISH']
+#    sqlQ = "STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW','WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
+#    copyFeature(shpName, sdeMOWPoly, keepList, inputFC, sqlQ)
+#    arcpy.env.workspace = shpPath
     
 ####    projSHP = shpName + "Proj.shp"
 ####    print("Projecting {0} to {1}.".format(newSHP, projSHP))
