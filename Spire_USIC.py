@@ -761,7 +761,7 @@ try:
     temPath = os.path.join(tempProjPath, temName)
     print("Temporary path created at {0}.".format(temPath))
     projPath = os.path.join(tempProjPath, projName)
-    outCS = arcpy.SpatialReference('NAD_1927_StatePlane_Missouri_East_FIPS_2401')
+    outCS = arcpy.SpatialReference("NAD 1983 StatePlane Missouri East FIPS 2401 (US Feet)")
     
     tempSHP = arcpy.conversion.FeatureClassToFeatureClass(newSHP, tempProjPath, temName)
     print("The production shapefile has been copied to {0} as {1}.".format(tempProjPath, temPath))
