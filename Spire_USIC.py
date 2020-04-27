@@ -866,7 +866,7 @@ try:
     copyFeature(shpName,sdeMOW,keepList,inputFC)
 ##------------------------Valves----------------------------------------------- 
     shpName = "GasValve"
-    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
+    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.GasValve'
     keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
                 'FITTINGTYPE','ROTATIONANGLE','LABELTEXT',\
                 'LOCATIONDESCRIPTION','DISTANCE1','DIRECTION1','LOCATION1',\
