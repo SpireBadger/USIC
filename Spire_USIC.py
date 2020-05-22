@@ -131,14 +131,14 @@ try:
     # is already in place.
     # This is a work around to deal with that issue and avoid needing to connect
     # ahead of time outside the script.
-    sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
-                                              'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
-                                              'DATABASE_AUTH', 'IMAPVIEW', \
-                                              'ue2Y6vwm','SAVE_USERNAME')
-    print("Database connection created at {0} to the Mo East Oracle Database."\
-          .format(sdeTempPath))
-    
-        ##Create the MO West SDE Connection
+#    sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
+#                                              'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
+#                                              'DATABASE_AUTH', 'IMAPVIEW', \
+#                                              'ue2Y6vwm','SAVE_USERNAME')
+#    print("Database connection created at {0} to the Mo East Oracle Database."\
+#          .format(sdeTempPath))
+#    
+#        ##Create the MO West SDE Connection
        
     sdeMOW = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOWServ.sde', \
                                               'ORACLE', 'stl-pgisdb-21.lac1.biz:1521/PGISM',\
@@ -146,31 +146,31 @@ try:
                                               'ue2Y6vwm','SAVE_USERNAME')
     print("Database connection created at {0} to the MO West Oracle Database."\
           .format(sdeTempPath))   
-    sdeAL = arcpy.CreateDatabaseConnection_management(sdeTempPath,'tempALServ.sde',\
-                                                      'ORACLE',\
-                                                      'xs-bhm-dgp-1.energen.com:1521/gsp',\
-                                                      'DATABASE_AUTH', 'GISADMIN',\
-                                                      'gisadmin','SAVE_USERNAME')
-    print("Database connection created at {0} to the Alabama Database."\
-          .format(sdeTempPath))
-    
-    #Mo East WO Polygons are stored in a different SDE than gas facilities.
-    # This SDE connection sets that up.
-    sdeMOEPoly = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOE_Poly.sde', \
-                                              'ORACLE', 'pgisdb02:1523/pgis3',\
-                                              'DATABASE_AUTH', 'mxviewer', \
-                                              'mxviewer','SAVE_USERNAME')
-    print("Database connection created at {0} to the Mo East WO Poly Database."\
-          .format(sdeTempPath))
-
-    sdeMOWPoly = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOW_Poly.sde', \
-                                              'ORACLE', 'pgisdb02.lac1.biz:1523/pgis3',\
-                                              'DATABASE_AUTH', 'mxviewer', \
-                                              'mxviewer','SAVE_USERNAME')
-    print("Database connection created at {0} to the Mo West WO Poly Database."\
-          .format(sdeTempPath))
-    print("\n")    
+#    sdeAL = arcpy.CreateDatabaseConnection_management(sdeTempPath,'tempALServ.sde',\
+#                                                      'ORACLE',\
+#                                                      'xs-bhm-dgp-1.energen.com:1521/gsp',\
+#                                                      'DATABASE_AUTH', 'GISADMIN',\
+#                                                      'gisadmin','SAVE_USERNAME')
+#    print("Database connection created at {0} to the Alabama Database."\
+#          .format(sdeTempPath))
 #    
+#    #Mo East WO Polygons are stored in a different SDE than gas facilities.
+#    # This SDE connection sets that up.
+#    sdeMOEPoly = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOE_Poly.sde', \
+#                                              'ORACLE', 'pgisdb02:1523/pgis3',\
+#                                              'DATABASE_AUTH', 'mxviewer', \
+#                                              'mxviewer','SAVE_USERNAME')
+#    print("Database connection created at {0} to the Mo East WO Poly Database."\
+#          .format(sdeTempPath))
+#
+#    sdeMOWPoly = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOW_Poly.sde', \
+#                                              'ORACLE', 'pgisdb02.lac1.biz:1523/pgis3',\
+#                                              'DATABASE_AUTH', 'mxviewer', \
+#                                              'mxviewer','SAVE_USERNAME')
+#    print("Database connection created at {0} to the Mo West WO Poly Database."\
+#          .format(sdeTempPath))
+#    print("\n")    
+##    
 ##----------------------------AL Setup----------------------------------------
 ##---------Dimension Text-------------------------------------------------------
 #    # Only this first shapefile will be commented, all others follow the same format unless otherwise
@@ -810,14 +810,14 @@ try:
 #            loc = row[0]
 #            newAddr = row[1]
 #            # Only add addresses that are not blank
-#            if row[1] <> None:
+#            if row[1] != None:
 #                # add address in format of key(mxlocation) and value (streetaddress)
 #                svcDict[loc] = newAddr
 #    # Delete cursor
 #    del row, Searchcursor
-##
-#    # Update the created shapefile with the new dictionary
-    # temp SHP location - delete after testing, exists to use test shp
+###
+##    # Update the created shapefile with the new dictionary
+#    # temp SHP location - delete after testing, exists to use test shp
     testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
 #    # Use update cursor to update service point shp
 #    with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
@@ -829,7 +829,7 @@ try:
 ##             If the mx location is found in the dictionary, update
 #            if mxLoc in svcDict:
 #                # update if old address is blank and the dictionary address isn't null
-#                if oldAddr == ' ' and svcDict[mxLoc] <> None:
+#                if oldAddr == ' ' and svcDict[mxLoc] != None:
 ##                 Change the street address to the street address matching the mxLocation in dict
 #                    # Print statement used for testing
 ##                    print("Row address {0} will be updated to {1}.".format(oldAddr, svcDict[mxLoc]))
@@ -839,7 +839,7 @@ try:
 ##
 #    # Delete cursor
 #    del cur
-##
+###
     # Create feature layers from service shp and service line and dist main
     ws = arcpy.env.workspace = sdeTempPath
     arcpy.MakeFeatureLayer_management(testingSHP, "point_lyr")
@@ -862,7 +862,7 @@ try:
     # Generate points along lines for END_POINTS
     # Use FeatureVerticesToPoints_management using BOTH_ENDS
     memPoints = "in_memory" + "\\" + "vertice_points"
-    arcpy.FeatureVerticesToPoints(memLine, memPoints, "BOTH_ENDS")
+    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
     arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
     
     # Select newly generated points that intersect with dist main, invert
@@ -876,6 +876,9 @@ try:
     # Copy selected features to in memory
     memPointsNew = "in_memory" + "\\" + "notdMain_points"
     arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
+    fieldsLi = arcpy.ListFields(memPointsNew)
+    for field in fieldsLi:
+        print("{0} is a field in memPointsNew.".format(field.name))
     
     # Append in memory features to shapefile using No_Test
     appendLayer = memPointsNew
@@ -891,19 +894,14 @@ try:
     listMapFields.append(('STREETADDRESS','STREETADDR'))
     
     for field_map in listMapFields:
-        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[0])
+        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[1])
         fieldToMap = fieldMappings.getFieldMap(fieldToMapIndex)
-        fieldToMap.addInputField(appendLayer, field_map[1])
+        fieldToMap.addInputField(appendLayer, field_map[0])
         fieldMappings.replaceFieldMap(fieldToMapIndex, fieldToMap)
         
     inData = [appendLayer]
     arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
-    
-    # Use search dict on service line to get:
-    # MXLOCATION, MXSTATUS, STREETADDRESS
-    
-    # use update cursor to update based on MXlocation
-    
+      
 #####------------------------Test Point-------------------------------------- -   
 #    shpName = "AnodeUSIC"
 #    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
