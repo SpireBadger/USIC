@@ -100,8 +100,8 @@ try:
     # set datetime variable
     d = datetime.datetime.now()
     # Test path Comment out when in prod
-    sdeTempPath = r"C:\USICTemp"
-#    sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
+    # sdeTempPath = r"C:\USICTemp"
+    sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
     if not os.path.exists(sdeTempPath):
         os.mkdir(sdeTempPath)
         print("Temporary directory not found. A new directory has been " + \
