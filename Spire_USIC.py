@@ -5,7 +5,7 @@
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
 # ArcGIS Version:   10.3
-# Python Version:   2.7.5
+# Python Version:   3.6
 # For a changelog of updates, visit the github at: https://github.com/SpireBadger/USIC
 # -----------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     # Get all fields
     fields = {f.name: f for f in arcpy.ListFields(inputFC)}
     # Clean up field map based on keep list
-    for fname, fld in fields.iteritems():
+    for fname, fld in fields.items():
        if fld.type not in ('OID', 'Geometry') and 'shape' not in fname.lower():
           if fname not in keepList:
 #             print("Field name {0} is not on the Keep List and will be removed.".format(fname))
@@ -100,7 +100,7 @@ try:
     # set datetime variable
     d = datetime.datetime.now()
     # Test path Comment out when in prod
-    # sdeTempPath = r"C:\USICTemp"
+#    sdeTempPath = r"C:\USICTemp"
     sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
     if not os.path.exists(sdeTempPath):
         os.mkdir(sdeTempPath)
@@ -462,7 +462,126 @@ try:
     keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
                 'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS']
     copyFeature(shpName,sdeMOE,keepList,inputFC)
+
+    # Add missing addresses
+    # Empty dictionary to fill with service line addresses & mxlocations
+    svcDict = {}
+    # Fields to fill dictionary
+    svcFields = ['MXLOCATION','STREETADDRESS']
+    # service line feature class to use for search
+    searchFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+    distMainFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+    # Insert search cursor
+    with arcpy.da.SearchCursor(searchFC, svcFields) as Searchcursor:
+        # For each row in cursor, get data for dictionary
+        for row in Searchcursor:
+            # store the row data in variables
+            loc = row[0]
+            newAddr = row[1]
+            # Only add addresses that are not blank
+            if row[1] != None:
+                # add address in format of key(mxlocation) and value (streetaddress)
+                svcDict[loc] = newAddr
+    # Delete cursor
+    del row, Searchcursor
+##
+#    # Update the created shapefile with the new dictionary
+    # temp SHP location - delete after testing, exists to use test shp
+    ##testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
+    # Use update cursor to update service point shp
+    with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
+#         For each row in cursor, iterate
+        for row in cur:
+#             Set variables for serviceMXL and streetaddr in the row
+            mxLoc = row[0]
+            oldAddr = row[1]
+#             If the mx location is found in the dictionary, update
+            if mxLoc in svcDict:
+                # update if old address is blank and the dictionary address isn't null
+                if oldAddr == ' ' and svcDict[mxLoc] != None:
+#                 Change the street address to the street address matching the mxLocation in dict
+                    # Print statement used for testing
+#                    print("Row address {0} will be updated to {1}.".format(oldAddr, svcDict[mxLoc]))
+                    row[1] = svcDict[mxLoc]
+#                 update the row
+                    cur.updateRow(row)
 #
+    # Delete cursor
+    del cur
+###
+    # Create feature layers from service shp and service line and dist main
+    ws = arcpy.env.workspace = sdeTempPath
+    arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
+    arcpy.MakeFeatureLayer_management(searchFC, "svcLine_lyr")
+    arcpy.MakeFeatureLayer_management(distMainFC, "distMain_lyr")
+    
+    # Select feature layers by location, lines that intersect service point shp
+    # can use INVERT to invert selection
+    arcpy.SelectLayerByLocation_management(in_layer="svcLine_lyr",\
+                                           overlap_type="INTERSECT",\
+                                           select_features="point_lyr",\
+                                           search_distance="",\
+                                           selection_type="NEW_SELECTION",\
+                                           invert_spatial_relationship="INVERT")
+
+    # Copy features to in memory fc
+    memLine = "in_memory" + "\\" + "svcLine_lyr"
+    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
+    
+    # Generate points along lines for END_POINTS
+    # Use FeatureVerticesToPoints_management using BOTH_ENDS
+    memPoints = "in_memory" + "\\" + "vertice_points"
+    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
+    arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
+    
+    # Select newly generated points that intersect with dist main, invert
+    arcpy.SelectLayerByLocation_management(in_layer="memPoint_lyr",\
+                                           overlap_type="INTERSECT",\
+                                           select_features="distMain_lyr",\
+                                           search_distance="",\
+                                           selection_type="NEW_SELECTION",\
+                                           invert_spatial_relationship="INVERT")
+    
+    # Copy selected features to in memory
+    memPointsNew = "in_memory" + "\\" + "notdMain_points"
+    arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
+    fieldsLi = arcpy.ListFields(memPointsNew)
+    for field in fieldsLi:
+        print("{0} is a field in memPointsNew.".format(field.name))
+    
+    # Append in memory features to shapefile using No_Test
+    appendLayer = memPointsNew
+    target_layer = newSHP
+    
+    # Set field mappings object var
+    fieldMappings = arcpy.FieldMappings()
+    
+    # Add tables for layers to be used
+    fieldMappings.addTable(target_layer)
+    fieldMappings.addTable(appendLayer)
+    
+    # Create list for map fields and add the fields wanted
+    listMapFields = []
+    # List goes append layer(1) ,target layer (2)
+    listMapFields.append(('MXLOCATION','SERVICEMXL'))
+    listMapFields.append(('STREETADDRESS','STREETADDR'))
+    
+    # Iterate through the fields
+    for field_map in listMapFields:
+        # Add fields to a field map index with target layer
+        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[1])
+        # Get map var
+        fieldToMap = fieldMappings.getFieldMap(fieldToMapIndex)
+        # Add append layer to field map to match target layer
+        fieldToMap.addInputField(appendLayer, field_map[0])
+        # Replace original index with updated one
+        fieldMappings.replaceFieldMap(fieldToMapIndex, fieldToMap)
+        
+    # Create append layer as a list
+    inData = [appendLayer]
+    # Append the newly created points to the target shapefile
+    arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
+
 ###------------------------Test Points--------------------------- ----------- 
 #    shpName = "AnodeUSICMoEast"
 #    inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
@@ -766,144 +885,144 @@ try:
 #    keepList = ['LOCATION','SYMBOLROTATION','DISTANCE','COVER']
 #    copyFeature(shpName,sdeMOW,keepList,inputFC)        
 # 
-###------------------------Service Points--------------------------- ----------- 
-    shpName = "ServicePointUSIC"
-    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
-    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
-                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS'\
-                ,'SERVICEPOINTTYPE','DIVISION','TOWN','SECTOR']   
-    copyFeature(shpName,sdeMOW,keepList,inputFC)
-
-    # Add a field for location length stored as a LONG
-    
-    arcpy.AddField_management(newSHP, "LOC", "LONG")
-    expression = "getClass(!SERVICEMXL!)"
-    codeBlock = """def getClass(SERVICEMXL):
-        if 'MGEMAIN' in SERVICEMXL or len(SERVICEMXL) > 9 or SERVICEMXL == ' ':
-            return 0
-        else:
-            return int(SERVICEMXL)"""     
-    arcpy.CalculateField_management(newSHP, "LOC",expression, "PYTHON_9.3", codeBlock)
-#    
-    # Add missing addresses
-    # Empty dictionary to fill with service line addresses & mxlocations
-    svcDict = {}
-    # Fields to fill dictionary
-    svcFields = ['MXLOCATION','STREETADDRESS']
-    # service line feature class to use for search
-    searchFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
-    distMainFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
-    # Insert search cursor
-    with arcpy.da.SearchCursor(searchFC, svcFields) as Searchcursor:
-        # For each row in cursor, get data for dictionary
-        for row in Searchcursor:
-            # store the row data in variables
-            loc = row[0]
-            newAddr = row[1]
-            # Only add addresses that are not blank
-            if row[1] != None:
-                # add address in format of key(mxlocation) and value (streetaddress)
-                svcDict[loc] = newAddr
-    # Delete cursor
-    del row, Searchcursor
-##
-#    # Update the created shapefile with the new dictionary
-    # temp SHP location - delete after testing, exists to use test shp
-    ##testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
-    # Use update cursor to update service point shp
-    with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
-#         For each row in cursor, iterate
-        for row in cur:
-#             Set variables for serviceMXL and streetaddr in the row
-            mxLoc = row[0]
-            oldAddr = row[1]
-#             If the mx location is found in the dictionary, update
-            if mxLoc in svcDict:
-                # update if old address is blank and the dictionary address isn't null
-                if oldAddr == ' ' and svcDict[mxLoc] != None:
-#                 Change the street address to the street address matching the mxLocation in dict
-                    # Print statement used for testing
-#                    print("Row address {0} will be updated to {1}.".format(oldAddr, svcDict[mxLoc]))
-                    row[1] = svcDict[mxLoc]
-#                 update the row
-                    cur.updateRow(row)
+####------------------------Service Points--------------------------- ----------- 
+#    shpName = "ServicePointUSIC"
+#    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.ServicePoint'
+#    keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
+#                'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS'\
+#                ,'SERVICEPOINTTYPE','DIVISION','TOWN','SECTOR']   
+#    copyFeature(shpName,sdeMOW,keepList,inputFC)
 #
-    # Delete cursor
-    del cur
+#    # Add a field for location length stored as a LONG
+#    
+#    arcpy.AddField_management(newSHP, "LOC", "LONG")
+#    expression = "getClass(!SERVICEMXL!)"
+#    codeBlock = """def getClass(SERVICEMXL):
+#        if 'MGEMAIN' in SERVICEMXL or len(SERVICEMXL) > 9 or SERVICEMXL == ' ':
+#            return 0
+#        else:
+#            return int(SERVICEMXL)"""     
+#    arcpy.CalculateField_management(newSHP, "LOC",expression, "PYTHON_9.3", codeBlock)
+##    
+#    # Add missing addresses
+#    # Empty dictionary to fill with service line addresses & mxlocations
+#    svcDict = {}
+#    # Fields to fill dictionary
+#    svcFields = ['MXLOCATION','STREETADDRESS']
+#    # service line feature class to use for search
+#    searchFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+#    distMainFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+#    # Insert search cursor
+#    with arcpy.da.SearchCursor(searchFC, svcFields) as Searchcursor:
+#        # For each row in cursor, get data for dictionary
+#        for row in Searchcursor:
+#            # store the row data in variables
+#            loc = row[0]
+#            newAddr = row[1]
+#            # Only add addresses that are not blank
+#            if row[1] != None:
+#                # add address in format of key(mxlocation) and value (streetaddress)
+#                svcDict[loc] = newAddr
+#    # Delete cursor
+#    del row, Searchcursor
 ###
-    # Create feature layers from service shp and service line and dist main
-    ws = arcpy.env.workspace = sdeTempPath
-    arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
-    arcpy.MakeFeatureLayer_management(searchFC, "svcLine_lyr")
-    arcpy.MakeFeatureLayer_management(distMainFC, "distMain_lyr")
-    
-    # Select feature layers by location, lines that intersect service point shp
-    # can use INVERT to invert selection
-    arcpy.SelectLayerByLocation_management(in_layer="svcLine_lyr",\
-                                           overlap_type="INTERSECT",\
-                                           select_features="point_lyr",\
-                                           search_distance="",\
-                                           selection_type="NEW_SELECTION",\
-                                           invert_spatial_relationship="INVERT")
-
-    # Copy features to in memory fc
-    memLine = "in_memory" + "\\" + "svcLine_lyr"
-    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
-    
-    # Generate points along lines for END_POINTS
-    # Use FeatureVerticesToPoints_management using BOTH_ENDS
-    memPoints = "in_memory" + "\\" + "vertice_points"
-    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
-    arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
-    
-    # Select newly generated points that intersect with dist main, invert
-    arcpy.SelectLayerByLocation_management(in_layer="memPoint_lyr",\
-                                           overlap_type="INTERSECT",\
-                                           select_features="distMain_lyr",\
-                                           search_distance="",\
-                                           selection_type="NEW_SELECTION",\
-                                           invert_spatial_relationship="INVERT")
-    
-    # Copy selected features to in memory
-    memPointsNew = "in_memory" + "\\" + "notdMain_points"
-    arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
-    fieldsLi = arcpy.ListFields(memPointsNew)
-    for field in fieldsLi:
-        print("{0} is a field in memPointsNew.".format(field.name))
-    
-    # Append in memory features to shapefile using No_Test
-    appendLayer = memPointsNew
-    target_layer = newSHP
-    
-    # Set field mappings object var
-    fieldMappings = arcpy.FieldMappings()
-    
-    # Add tables for layers to be used
-    fieldMappings.addTable(target_layer)
-    fieldMappings.addTable(appendLayer)
-    
-    # Create list for map fields and add the fields wanted
-    listMapFields = []
-    # List goes append layer(1) ,target layer (2)
-    listMapFields.append(('MXLOCATION','SERVICEMXL'))
-    listMapFields.append(('STREETADDRESS','STREETADDR'))
-    
-    # Iterate through the fields
-    for field_map in listMapFields:
-        # Add fields to a field map index with target layer
-        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[1])
-        # Get map var
-        fieldToMap = fieldMappings.getFieldMap(fieldToMapIndex)
-        # Add append layer to field map to match target layer
-        fieldToMap.addInputField(appendLayer, field_map[0])
-        # Replace original index with updated one
-        fieldMappings.replaceFieldMap(fieldToMapIndex, fieldToMap)
-        
-    # Create append layer as a list
-    inData = [appendLayer]
-    # Append the newly created points to the target shapefile
-    arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
-#      
+##    # Update the created shapefile with the new dictionary
+#    # temp SHP location - delete after testing, exists to use test shp
+#    ##testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
+#    # Use update cursor to update service point shp
+#    with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
+##         For each row in cursor, iterate
+#        for row in cur:
+##             Set variables for serviceMXL and streetaddr in the row
+#            mxLoc = row[0]
+#            oldAddr = row[1]
+##             If the mx location is found in the dictionary, update
+#            if mxLoc in svcDict:
+#                # update if old address is blank and the dictionary address isn't null
+#                if oldAddr == ' ' and svcDict[mxLoc] != None:
+##                 Change the street address to the street address matching the mxLocation in dict
+#                    # Print statement used for testing
+##                    print("Row address {0} will be updated to {1}.".format(oldAddr, svcDict[mxLoc]))
+#                    row[1] = svcDict[mxLoc]
+##                 update the row
+#                    cur.updateRow(row)
+##
+#    # Delete cursor
+#    del cur
+####
+#    # Create feature layers from service shp and service line and dist main
+#    ws = arcpy.env.workspace = sdeTempPath
+#    arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
+#    arcpy.MakeFeatureLayer_management(searchFC, "svcLine_lyr")
+#    arcpy.MakeFeatureLayer_management(distMainFC, "distMain_lyr")
+#    
+#    # Select feature layers by location, lines that intersect service point shp
+#    # can use INVERT to invert selection
+#    arcpy.SelectLayerByLocation_management(in_layer="svcLine_lyr",\
+#                                           overlap_type="INTERSECT",\
+#                                           select_features="point_lyr",\
+#                                           search_distance="",\
+#                                           selection_type="NEW_SELECTION",\
+#                                           invert_spatial_relationship="INVERT")
+#
+#    # Copy features to in memory fc
+#    memLine = "in_memory" + "\\" + "svcLine_lyr"
+#    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
+#    
+#    # Generate points along lines for END_POINTS
+#    # Use FeatureVerticesToPoints_management using BOTH_ENDS
+#    memPoints = "in_memory" + "\\" + "vertice_points"
+#    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
+#    arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
+#    
+#    # Select newly generated points that intersect with dist main, invert
+#    arcpy.SelectLayerByLocation_management(in_layer="memPoint_lyr",\
+#                                           overlap_type="INTERSECT",\
+#                                           select_features="distMain_lyr",\
+#                                           search_distance="",\
+#                                           selection_type="NEW_SELECTION",\
+#                                           invert_spatial_relationship="INVERT")
+#    
+#    # Copy selected features to in memory
+#    memPointsNew = "in_memory" + "\\" + "notdMain_points"
+#    arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
+#    fieldsLi = arcpy.ListFields(memPointsNew)
+#    for field in fieldsLi:
+#        print("{0} is a field in memPointsNew.".format(field.name))
+#    
+#    # Append in memory features to shapefile using No_Test
+#    appendLayer = memPointsNew
+#    target_layer = newSHP
+#    
+#    # Set field mappings object var
+#    fieldMappings = arcpy.FieldMappings()
+#    
+#    # Add tables for layers to be used
+#    fieldMappings.addTable(target_layer)
+#    fieldMappings.addTable(appendLayer)
+#    
+#    # Create list for map fields and add the fields wanted
+#    listMapFields = []
+#    # List goes append layer(1) ,target layer (2)
+#    listMapFields.append(('MXLOCATION','SERVICEMXL'))
+#    listMapFields.append(('STREETADDRESS','STREETADDR'))
+#    
+#    # Iterate through the fields
+#    for field_map in listMapFields:
+#        # Add fields to a field map index with target layer
+#        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[1])
+#        # Get map var
+#        fieldToMap = fieldMappings.getFieldMap(fieldToMapIndex)
+#        # Add append layer to field map to match target layer
+#        fieldToMap.addInputField(appendLayer, field_map[0])
+#        # Replace original index with updated one
+#        fieldMappings.replaceFieldMap(fieldToMapIndex, fieldToMap)
+#        
+#    # Create append layer as a list
+#    inData = [appendLayer]
+#    # Append the newly created points to the target shapefile
+#    arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
+##      
 #####------------------------Test Point-------------------------------------- -   
 #    shpName = "AnodeUSIC"
 #    inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
