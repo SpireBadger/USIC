@@ -1,6 +1,6 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 05/22/2020
+# Last Updated: 06/30/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
@@ -508,7 +508,9 @@ try:
 #
     # Delete cursor
     del cur
-###
+### The section below is to create service points from services that only have
+    #a service line fc and no service point in the data. USIC uses service points
+    # to look at whether a service exists so creating phantom ones avoids issues.
     # Create feature layers from service shp and service line and dist main
     ws = arcpy.env.workspace = sdeTempPath
     arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
