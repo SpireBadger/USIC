@@ -1,11 +1,11 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 05/22/2020
+# Last Updated: 06/30/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
 # ArcGIS Version:   10.3
-# Python Version:   2.7.5
+# Python Version:   3.6
 # For a changelog of updates, visit the github at: https://github.com/SpireBadger/USIC
 # -----------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
     # Get all fields
     fields = {f.name: f for f in arcpy.ListFields(inputFC)}
     # Clean up field map based on keep list
-    for fname, fld in fields.iteritems():
+    for fname, fld in fields.items():
        if fld.type not in ('OID', 'Geometry') and 'shape' not in fname.lower():
           if fname not in keepList:
 #             print("Field name {0} is not on the Keep List and will be removed.".format(fname))
@@ -100,7 +100,7 @@ try:
     # set datetime variable
     d = datetime.datetime.now()
     # Test path Comment out when in prod
-    # sdeTempPath = r"C:\USICTemp"
+#    sdeTempPath = r"C:\USICTemp"
     sdeTempPath = r"\\pdatfile01\ProdData\GIS\USIC"
     if not os.path.exists(sdeTempPath):
         os.mkdir(sdeTempPath)
@@ -427,9 +427,15 @@ try:
     keepList = ['METERLOCATION','ADDRESS']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
+<<<<<<< HEAD
 ############################   MISSOURI EAST    ############################### 
 
 #------------------------MoNat Dimension Text--------------------- ----------- 
+=======
+#############################   MISSOURI EAST    ############################### 
+##
+###------------------------MoNat Dimension Text--------------------- ----------- 
+>>>>>>> bbc730470a83e717b0484b71469ea86727adec31
     shpName = "DimMoNatTextUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
     keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
@@ -462,6 +468,127 @@ try:
     keepList = ['CUSTOMERTYPE','SERVICEMXLOCATION','SERVICESTATUS','DISCLOCATION',\
                 'STREETADDRESS','METERLOCATIONDESC','METERLOCATION','MXSTATUS']
     copyFeature(shpName,sdeMOE,keepList,inputFC)
+
+    # Add missing addresses
+    # Empty dictionary to fill with service line addresses & mxlocations
+    svcDict = {}
+    # Fields to fill dictionary
+    svcFields = ['MXLOCATION','STREETADDRESS']
+    # service line feature class to use for search
+    searchFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+    distMainFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+    # Insert search cursor
+    with arcpy.da.SearchCursor(searchFC, svcFields) as Searchcursor:
+        # For each row in cursor, get data for dictionary
+        for row in Searchcursor:
+            # store the row data in variables
+            loc = row[0]
+            newAddr = row[1]
+            # Only add addresses that are not blank
+            if row[1] != None:
+                # add address in format of key(mxlocation) and value (streetaddress)
+                svcDict[loc] = newAddr
+    # Delete cursor
+    del row, Searchcursor
+##
+#    # Update the created shapefile with the new dictionary
+    # temp SHP location - delete after testing, exists to use test shp
+    ##testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
+    # Use update cursor to update service point shp
+    with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
+#         For each row in cursor, iterate
+        for row in cur:
+#             Set variables for serviceMXL and streetaddr in the row
+            mxLoc = row[0]
+            oldAddr = row[1]
+#             If the mx location is found in the dictionary, update
+            if mxLoc in svcDict:
+                # update if old address is blank and the dictionary address isn't null
+                if oldAddr == ' ' and svcDict[mxLoc] != None:
+#                 Change the street address to the street address matching the mxLocation in dict
+                    # Print statement used for testing
+#                    print("Row address {0} will be updated to {1}.".format(oldAddr, svcDict[mxLoc]))
+                    row[1] = svcDict[mxLoc]
+#                 update the row
+                    cur.updateRow(row)
+#
+    # Delete cursor
+    del cur
+### The section below is to create service points from services that only have
+    #a service line fc and no service point in the data. USIC uses service points
+    # to look at whether a service exists so creating phantom ones avoids issues.
+    # Create feature layers from service shp and service line and dist main
+    ws = arcpy.env.workspace = sdeTempPath
+    arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
+    arcpy.MakeFeatureLayer_management(searchFC, "svcLine_lyr")
+    arcpy.MakeFeatureLayer_management(distMainFC, "distMain_lyr")
+    
+    # Select feature layers by location, lines that intersect service point shp
+    # can use INVERT to invert selection
+    arcpy.SelectLayerByLocation_management(in_layer="svcLine_lyr",\
+                                           overlap_type="INTERSECT",\
+                                           select_features="point_lyr",\
+                                           search_distance="",\
+                                           selection_type="NEW_SELECTION",\
+                                           invert_spatial_relationship="INVERT")
+
+    # Copy features to in memory fc
+    memLine = "in_memory" + "\\" + "svcLine_lyr"
+    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
+    
+    # Generate points along lines for END_POINTS
+    # Use FeatureVerticesToPoints_management using BOTH_ENDS
+    memPoints = "in_memory" + "\\" + "vertice_points"
+    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
+    arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
+    
+    # Select newly generated points that intersect with dist main, invert
+    arcpy.SelectLayerByLocation_management(in_layer="memPoint_lyr",\
+                                           overlap_type="INTERSECT",\
+                                           select_features="distMain_lyr",\
+                                           search_distance="",\
+                                           selection_type="NEW_SELECTION",\
+                                           invert_spatial_relationship="INVERT")
+    
+    # Copy selected features to in memory
+    memPointsNew = "in_memory" + "\\" + "notdMain_points"
+    arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
+    fieldsLi = arcpy.ListFields(memPointsNew)
+    for field in fieldsLi:
+        print("{0} is a field in memPointsNew.".format(field.name))
+    
+    # Append in memory features to shapefile using No_Test
+    appendLayer = memPointsNew
+    target_layer = newSHP
+    
+    # Set field mappings object var
+    fieldMappings = arcpy.FieldMappings()
+    
+    # Add tables for layers to be used
+    fieldMappings.addTable(target_layer)
+    fieldMappings.addTable(appendLayer)
+    
+    # Create list for map fields and add the fields wanted
+    listMapFields = []
+    # List goes append layer(1) ,target layer (2)
+    listMapFields.append(('MXLOCATION','SERVICEMXL'))
+    listMapFields.append(('STREETADDRESS','STREETADDR'))
+    
+    # Iterate through the fields
+    for field_map in listMapFields:
+        # Add fields to a field map index with target layer
+        fieldToMapIndex = fieldMappings.findFieldMapIndex(field_map[1])
+        # Get map var
+        fieldToMap = fieldMappings.getFieldMap(fieldToMapIndex)
+        # Add append layer to field map to match target layer
+        fieldToMap.addInputField(appendLayer, field_map[0])
+        # Replace original index with updated one
+        fieldMappings.replaceFieldMap(fieldToMapIndex, fieldToMap)
+        
+    # Create append layer as a list
+    inData = [appendLayer]
+    # Append the newly created points to the target shapefile
+    arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
 
 ##------------------------Test Points--------------------------- ----------- 
     shpName = "AnodeUSICMoEast"
@@ -614,8 +741,13 @@ try:
     del cursor
     # Delete the fieldbook path as its no longer needed
     arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
+<<<<<<< HEAD
     
 ##------------------------Services----------------------- ---------------------
+=======
+#    
+#------------------------Services----------------------- ---------------------
+>>>>>>> bbc730470a83e717b0484b71469ea86727adec31
     shpName = "ServiceUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
     keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
@@ -738,6 +870,7 @@ try:
     keepList = ['STATUS','MXWONUM','WORKTYPE','DESCRIPTION','ZLAC_SUBWORKTYPE',\
                 'ACTFINISH']
     sqlQ = r"STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW', 'WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
+<<<<<<< HEAD
     copyFeature(shpName, sdeMOEPoly, keepList, inputFC, sqlQ)
     arcpy.env.workspace = shpPath
     projSHP = shpName + "Proj.shp"
@@ -749,6 +882,10 @@ try:
     print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
     arcpy.Delete_management(newSHP)
 ##########################   MISSOURI WEST    ###############################      
+=======
+#    copyFeature(shpName, sdeMOEPoly, keepList, inputFC, sqlQ)
+############################   MISSOURI WEST    ###############################      
+>>>>>>> bbc730470a83e717b0484b71469ea86727adec31
 #------------------------Marker Ball--------------------- ----------- 
     shpName = "MarkerBallUSIC"
     inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
@@ -912,7 +1049,7 @@ try:
     inData = [appendLayer]
     # Append the newly created points to the target shapefile
     arcpy.Append_management(inData, target_layer, "NO_TEST", fieldMappings)
-      
+#      
 ####------------------------Test Point-------------------------------------- -   
     shpName = "AnodeUSIC"
     inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.CPTestPoint'
@@ -970,15 +1107,7 @@ try:
                 'ACTFINISH']
     sqlQ = "STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW','WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
     copyFeature(shpName, sdeMOWPoly, keepList, inputFC, sqlQ)
-#    arcpy.env.workspace = shpPath
-#    projSHP = shpName + "Proj.shp"
-#    print("Projecting {0} to {1}.".format(newSHP, projSHP))
-#    arcpy.Project_management(newSHP,projSHP,\
-#                             "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
-#                             "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
-#                             "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
-#    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
-#    arcpy.Delete_management(newSHP)
+
 ##------------------------Map Grid--------------------------- -----------    
     shpName = "MapGrid"
     inputFC = sdeMOW.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MapGrid'
