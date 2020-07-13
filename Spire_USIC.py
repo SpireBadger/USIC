@@ -170,9 +170,9 @@ try:
     print("Database connection created at {0} to the Mo West WO Poly Database."\
           .format(sdeTempPath))
     print("\n")    
-#    
-#----------------------------AL Setup----------------------------------------
-#---------Dimension Text-------------------------------------------------------
+##    
+##----------------------------AL Setup----------------------------------------
+##---------Dimension Text-------------------------------------------------------
     # Only this first shapefile will be commented, all others follow the same format unless otherwise
     # noted in comments
       # Set the shapefile name
@@ -186,7 +186,7 @@ try:
    # Run the copyFeature function to create the shapefile.     
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
-#---------Distribution Main-------------------------------------------------------
+######---------Distribution Main-------------------------------------------------------
     shpName = "main"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Main'
     keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
@@ -203,15 +203,15 @@ try:
                 'COMMENTS', 'MAXINLETPRESSURE', 'MAXOUTLETPRESSURE',\
                 'SUBTYPE','SETTINGNAME']
     copyFeature(shpName,sdeAL,keepList,inputFC)
-#    
-##---------Abandoned Main----------------------------------------------------
+    
+####---------Abandoned Main----------------------------------------------------
     shpName = "AbandonedMain"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedMain'
     keepList = ['MEASUREDLENGTH', 'COATINGTYPE', \
                 'NOMINALPIPESIZE', 'MATERIAL','DATEABANDONED', 'LABELTEXT']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Valves----------------------------------------------------
+####---------Valves----------------------------------------------------
     shpName = "Valves"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Valve'
     keepList = ['INSTALLDATE', 'COMMENTS', 'HOUSEDIN', \
@@ -221,19 +221,19 @@ try:
                 'LOCATIONDESCRIPTION']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Casing----------------------------------------------------
+####---------Casing----------------------------------------------------
     shpName = "Casing"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Casing'
     keepList = ['MEASUREDLENGTH', 'CASINGCOATINDICATOR',\
                 'CASINGSIZE', 'CASINGMATERIAL','LABELTEXT']
     copyFeature(shpName,sdeAL,keepList,inputFC)
-#---------Drips----------------------------------------------------
+####---------Drips----------------------------------------------------
     shpName = "Drips"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Drip'
     keepList = ['LOCATIONDESCRIPTION', 'INSTALLDATE','LABELTEXT']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Marker Ball----------------------------------------------------
+####---------Marker Ball----------------------------------------------------
     shpName = "ElectronicMarker"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ElectronicMarker'
     keepList = ['INSTALLDATE', 'DISTANCE1','DIRECTION1',\
@@ -241,13 +241,13 @@ try:
                 'LOCATION2','BUILDING2','STREET2']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------First Cut Regulator----------------------------------------------------
+####---------First Cut Regulator----------------------------------------------------
     shpName = "FirstCutRegulator"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FirstCutRegulator'
     keepList = ['LOCATIONDESCRIPTION','ROTATIONANGLE','INSTALLDATE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Fittings----------------------------------------------------
+####---------Fittings----------------------------------------------------
     shpName = "Fittings"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Fitting'
     keepList = ['FITTINGSIZE','INSULATEDINDICATOR','MATERIAL',\
@@ -257,7 +257,7 @@ try:
                 'BUILDING2','STREET2']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Services----------------------------------------------------
+####---------Services----------------------------------------------------
     shpName = "Services"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.Service'
     keepList = ['INSTALLDATE','MEASUREDLENGTH','LENGTHSOURCE','COATINGTYPE',\
@@ -268,34 +268,34 @@ try:
                 'STREETADDRESS','MAINMATERIAL']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Stopper Fitting----------------------------------------------------
+####---------Stopper Fitting----------------------------------------------------
     shpName = "StopperFitting"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.StopperFitting'
     keepList = ['INSTALLDATE','LABELTEXT','LOCATIONDESCRIPTION','PRESENTPOSITION']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-#---------Premises----------------------------------------------------
+####---------Premises----------------------------------------------------
     shpName = "Premise"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Historical\GISADMIN.Premise'
     keepList = ['INSTALLIONDATE','PIPENAME','LOCATIONDESCRIPTION',\
                 'PIPEID','MANUFACTURER']
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
-#---------CP Rectifier----------------------------------------------------
+####---------CP Rectifier----------------------------------------------------
     shpName = "CPRectifier"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPRectifier'
     keepList = ['LOCATIONDESCRIPTION','RECTIFIERNAME','RECTIFIERTYPE',\
                 'LABELTEXT']
     copyFeature(shpName,sdeAL,keepList,inputFC) 
 
-##------------------------Abandon Services--------------------------------------     
+####------------------------Abandon Services--------------------------------------     
     shpName = "abandonService"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.AbandonedService'
     keepList = ['NOMINALSIZE','MATERIALCODE','DATEABANDONED','LABELTEXT',\
                 'RETIREMENTPROJECTNUMBER']
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
-##------------------------CP Anode-------------------------------------- -------      
+####------------------------CP Anode-------------------------------------- -------      
     shpName = "CPAnode"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPAnode'
     keepList = ['DISTANCE1','DIRECTION1','LOCATION1',\
@@ -304,7 +304,7 @@ try:
                 'BOXTYPE','LOCATIONDESCRIPTION']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------CP Test Point-------------------------------------- -------      
+####------------------------CP Test Point-------------------------------------- -------      
     shpName = "CPTestPoint"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CPTestPoint'
     keepList = ['COMMENTS','DISTANCE1','DIRECTION1','LOCATION1',\
@@ -313,67 +313,67 @@ try:
                 'STATIONTYPE','LOCATIONDESCRIPTION']
     copyFeature(shpName,sdeAL,keepList,inputFC)
 
-##------------------------Service Text--------------------------------- -------   
+####------------------------Service Text--------------------------------- -------   
     shpName = "serviceText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ServiceText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC) 
     
-##------------------------Misc Text--------------------------------- ----------- 
+####------------------------Misc Text--------------------------------- ----------- 
     shpName = "MiscellaneousText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.MiscellaneousText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Project Boundary------------------------- ----------- 
+####------------------------Project Boundary------------------------- ----------- 
     shpName = "ProjectBoundary"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.ProjectData\GISADMIN.ProjectBoundary'
     keepList = ['DESCRIPTION','STATUS','PROJECTNUMBER']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Casing Text------------------------- ----------- 
+####------------------------Casing Text------------------------- ----------- 
     shpName = "casingText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.CasingText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC) 
     
-##------------------------Valve Text------------------------- ----------- 
+####------------------------Valve Text------------------------- ----------- 
     shpName = "valveText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.ValveText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Fitting Text------------------------- ----------- 
+####------------------------Fitting Text------------------------- ----------- 
     shpName = "fittingText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.FittingText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Retired Main Text------------------------- ----------- 
+####------------------------Retired Main Text------------------------- ----------- 
     shpName = "RetiredMainText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredMainText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Retired Service Text------------------------- ----------- 
+####------------------------Retired Service Text------------------------- ----------- 
     shpName = "RetiredServiceText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RetiredServiceText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##------------------------Regulator Station Text------------------------- ----------- 
+####------------------------Regulator Station Text------------------------- ----------- 
     shpName = "regStationText"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Gas\GISADMIN.RegulatorStationText'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-###------------------------Leader Lines------------------------- -----
+#------------------------Leader Lines------------------------- -----
     shpName = "LeaderLines"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.LeaderLine'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-###------------------------Leader Lines------------------------- -----
+#------------------------Leader Lines------------------------- -----
     shpName = "HookLeader"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.Landbase\GISADMIN.HookLeader'
     keepList = ['TEXTSTRING','FONTSIZE','ANGLE']
@@ -427,9 +427,9 @@ try:
     keepList = ['METERLOCATION','ADDRESS']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-##############################   MISSOURI EAST    ############################### 
-##
-###------------------------MoNat Dimension Text--------------------- ----------- 
+############################   MISSOURI EAST    ############################### 
+
+#------------------------MoNat Dimension Text--------------------- ----------- 
     shpName = "DimMoNatTextUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_LAND.Landbase\LGC_LAND.MoNatDimText'
     keepList = ['SYMBOLROTATION','DIMENSION','COUNTY']
@@ -532,7 +532,7 @@ try:
                 'MATERIAL','DRIPTYPE','CONNECTYPE','OFFSET']
     copyFeature(shpName,sdeMOE,keepList,inputFC)
     
-###------------------------Distribution Main----------------------- -----------
+#------------------------Distribution Main----------------------- -----------
     ## Distribution main is unique and requires more manipulation to produce. 
     shpName = "DistributionMainUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
@@ -555,7 +555,7 @@ try:
         for row in cursor:
             # This sets any blank or null fieldbookpaths to none
             if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
+                print("Row being updated from blank to None.")
                 none = "None"
                 row[0] = none
                 cursor.updateRow(row)
@@ -583,7 +583,7 @@ try:
                 cursor.updateRow(row)
     # Clean up the cursor object                        
     del cursor
-###-----------------------------Create Main PDF Folder-------------------------
+#-----------------------------Create Main PDF Folder-------------------------
     # Copy pdfs of field books modified in the last 14 days.
     # Set current date variable
     CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
@@ -592,7 +592,7 @@ try:
     # Set a sql query using dates
     query='"DATEINSTAL" <= date '+"'"+CUR_DATE+"' AND "+'"DATEINSTAL" >= date '+"'"+str(d)+"'"
 
-#   Set the workspace to the new pdf folder.
+######   Set the workspace to the new pdf folder.
     arcpy.env.workspace = shpPath
     
     # Create a list of any existing pdfs. If present, delete them.
@@ -606,7 +606,7 @@ try:
         print("Searching for PDFs.")
         for row in cursor:
             print(row[0])
-#            print row[1]
+            print row[1]
             if row[0] != 'None' and arcpy.Exists(row[0]):
                 shutil.copy2(row[0], shpPath)
             else:
@@ -615,7 +615,7 @@ try:
     # Delete the fieldbook path as its no longer needed
     arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
     
-#------------------------Services----------------------- ---------------------
+##------------------------Services----------------------- ---------------------
     shpName = "ServiceUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
     keepList = ['OWNER','DATECREATED','MXSTATUS','STREETADDRESS','SERVICETYPE',\
@@ -633,7 +633,7 @@ try:
     with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
         for row in cursor:
             if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
+                print("Row being updated from blank to None.")
                 none = "None"
                 row[0] = none
                 cursor.updateRow(row)
@@ -660,7 +660,7 @@ try:
                 row[1] = ok2
                 cursor.updateRow(row)                        
     del cursor
-###-----------------------------Create Service PDFs-------------------------
+#-----------------------------Create Service PDFs-------------------------
     # Copy pdfs of field books modified in the last 14 days.
     # Set current date variable
     CUR_DATE = datetime.date.today().strftime('%Y-%m-%d')
@@ -669,7 +669,7 @@ try:
     # Set a sql query using dates
     query='"DATECREATE" <= date '+"'"+CUR_DATE+"' AND "+'"DATECREATE" >= date '+"'"+str(d)+"'"
 
-#   Set the workspace to the new pdf folder.
+####   Set the workspace to the new pdf folder.
     arcpy.env.workspace = shpPath
             
     # Create a search cursor for the feature layer
@@ -678,7 +678,7 @@ try:
         print("Searching for PDFs.")
         for row in cursor:
             print(row[0])
-#            print row[1]
+            print row[1]
             if row[0] != 'NO FIELDBOOK' and arcpy.Exists(row[0]):
                 print("Creating a pdf for {0}.".format(row[0]))
                 shutil.copy2(row[0], shpPath)
@@ -689,7 +689,7 @@ try:
                 print("Row for {0} is blank or the PDF cannot be found.".format(row[0]))
     del row, cursor
     arcpy.DeleteField_management(newSHP,"FIELDBOOKP")
-###-----------------------------Abandoned Main-------------------------    
+#-----------------------------Abandoned Main-------------------------    
     shpName = "AbandonedGasPipeUSICMoEast"
     inputFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.AbandonedGasPipe'
     keepList = ['OWNER','DATECREATED','DATEMODIFIED','RETIREDATE','REASON',\
@@ -705,7 +705,7 @@ try:
     with arcpy.da.UpdateCursor(newSHP, ['FIELDBOOKP', 'FieldNote']) as cursor:
         for row in cursor:
             if row[0] == " " or row[0] is None:
-#                print("Row being updated from blank to None.")
+                print("Row being updated from blank to None.")
                 none = "None"
                 row[0] = none
                 cursor.updateRow(row)
@@ -739,16 +739,16 @@ try:
                 'ACTFINISH']
     sqlQ = r"STATUS in ( 'RJCTDFCOMP', 'FCOMP', 'GISREVW', 'WFFILE','CONTRCOMP', 'INPRG', 'LSNC','DISPATCH','ENROUTE','ASBUILTWAPPR','RJCTDASBUILTCOMP','CONTINST','RJCTDASBILTWAPPR','RJCTDWASBUILT','WASBUILT')"
     copyFeature(shpName, sdeMOEPoly, keepList, inputFC, sqlQ)
-#    arcpy.env.workspace = shpPath
-#    projSHP = shpName + "Proj.shp"
-#    print("Projecting {0} to {1}.".format(newSHP, projSHP))
-#    arcpy.Project_management(newSHP,projSHP,\
-#                             "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
-#                             "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
-#                             "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
-#    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
-##    arcpy.Delete_management(newSHP)
-############################   MISSOURI WEST    ###############################      
+    arcpy.env.workspace = shpPath
+    projSHP = shpName + "Proj.shp"
+    print("Projecting {0} to {1}.".format(newSHP, projSHP))
+    arcpy.Project_management(newSHP,projSHP,\
+                             "PROJCS['NAD_1983_StatePlane_Missouri_West_FIPS_2403_Feet',GEOGCS['GCS_North_American_1983',DATUM['D_North_American_1983',SPHEROID['GRS_1980',6378137.0,298.257222101]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',2788708.333333333],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-94.5],PARAMETER['Scale_Factor',0.9999411764705882],PARAMETER['Latitude_Of_Origin',36.16666666666666],UNIT['Foot_US',0.3048006096012192]]",\
+                             "'WGS_1984_Major_Auxiliary_Sphere_To_WGS_1984 + WGS_1984_(ITRF00)_To_NAD_1983'",\
+                             "PROJCS['WGS_1984_Web_Mercator',GEOGCS['GCS_WGS_1984_Major_Auxiliary_Sphere',DATUM['D_WGS_1984_Major_Auxiliary_Sphere',SPHEROID['WGS_1984_Major_Auxiliary_Sphere',6378137.0,0.0]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Mercator'],PARAMETER['False_Easting',0.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',0.0],PARAMETER['Standard_Parallel_1',0.0],UNIT['Meter',1.0]]")
+    print("Deleting the wrongly projected {0} shapefile.".format(newSHP))
+    arcpy.Delete_management(newSHP)
+##########################   MISSOURI WEST    ###############################      
 #------------------------Marker Ball--------------------- ----------- 
     shpName = "MarkerBallUSIC"
     inputFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.LocationIndicator'
