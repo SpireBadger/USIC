@@ -726,7 +726,7 @@ try:
         print("Searching for PDFs.")
         for row in cursor:
             print(row[0])
-            print row[1]
+            print(row[1])
             if row[0] != 'None' and arcpy.Exists(row[0]):
                 shutil.copy2(row[0], shpPath)
             else:
@@ -799,7 +799,7 @@ try:
         print("Searching for PDFs.")
         for row in cursor:
             print(row[0])
-            print row[1]
+            print(row[1])
             if row[0] != 'NO FIELDBOOK' and arcpy.Exists(row[0]):
                 print("Creating a pdf for {0}.".format(row[0]))
                 shutil.copy2(row[0], shpPath)
