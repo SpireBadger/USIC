@@ -1,6 +1,6 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 06/30/2020
+# Last Updated: 07/13/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
@@ -427,11 +427,9 @@ try:
     keepList = ['METERLOCATION','ADDRESS']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
-<<<<<<< HEAD
 ############################   MISSOURI EAST    ############################### 
 
 #------------------------MoNat Dimension Text--------------------- ----------- 
-=======
 #############################   MISSOURI EAST    ############################### 
 ##
 ###------------------------MoNat Dimension Text--------------------- ----------- 
