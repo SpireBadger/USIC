@@ -1,6 +1,6 @@
 # Project: Spire to USIC data compilation
 # Create Date: 02/13/2020
-# Last Updated: 07/13/2020
+# Last Updated: 09/16/2020
 # Create by: Brad Craddick & Robert Domiano
 # Updated by: Robert Domiano
 # Purpose: To provide a clean set of MO East, MO West, and Alabama to USIC
@@ -97,6 +97,49 @@ def copyFeature(shpName, sdeConnect, keepList, inputFC, sqlQ='#'):
 # Set unbuffered mode
 sys.stdout = Unbuffered(sys.stdout)
 try:
+    d = datetime.datetime.now()
+    log = open(r"C:\\Temp\USIC_Log.txt","w")
+    log.write("----------------------------" + "\n")
+    log.write("Go here to edit script" + "\n")
+    log.write(r"\\gisappser2\Engineering_GIS\Brad_Valves\PythonScripts\NewiMap\USIC_Combined.py" + "\n")
+    log.write("----------------------------" + "\n")
+    log.write("Log: " + str(d) + "\n")
+    log.write("\n")
+    saveToFolder = r'C:\temp'
+    def getEmails(feature):
+        """This function returns a string that represents the recepients of the email
+
+        For each of the relevant fields, checks are performed to ensure that the emails are correct and None values are ignored. 
+        
+        Returns:
+            String -- A comma seperated list of emails that represents the recepients of the email
+        """
+        damageCoordinator = "Robert.Domiano@spireenergy.com"
+    ##    ##
+##        foreman = "Alex.McBride@spireenergy.com"
+
+        additional = "brad.craddick@spireenergy.com"
+      
+    ##        emails = [damageCoordinator,foreman,additional]
+        emails = [additional,damageCoordinator]
+
+        for email in emails:
+            if (email[-16:] != "@spireenergy.com") and email != "":
+                log.info("{} is not a valid email. An email will not be sent to this address.".format(email))
+                emails.remove(email)
+        emailString = ""
+
+        for email in emails:
+            emailString += email + ","
+        return emailString[:-1]
+    def getName(feature):
+        address = str('USIC Script Error')
+        return address 
+    def sendEmail(recepientAddress,name):
+        command = 'D:\GisServerManager\ServiceMonitor\\bin\\blat.exe -f brad.craddick@spireenergy.com -to {} -s "USIC Script Error {}" -body "New error from {}. Please see attached report for more details.<br><br>This is an automated email. Please do not reply." -server emailserver.lac1.biz:25 -attach "{}" -html'.format(recepientAddress,name,name,saveToFolder + r"\USICScriptLog.html")
+        os.system(command)
+        print (command)
+    feature="hi"
     # set datetime variable
     d = datetime.datetime.now()
     # Test path Comment out when in prod
@@ -111,9 +154,9 @@ try:
 
     # open log file for holding errors
     # will also create file if not already there
-    logName = "LogFile.txt"
-    logPath = os.path.join(sdeTempPath, logName)
-    log = open(logPath,"a")
+##    logName = "LogFile.txt"
+##    logPath = os.path.join(sdeTempPath, logName)
+    log = open(r"C:\\Temp\USIC_Log.txt","w")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
     # write datetime to log
@@ -131,6 +174,7 @@ try:
 #     is already in place.
 #     This is a work around to deal with that issue and avoid needing to connect
 #     ahead of time outside the script.
+##    arcpy.MakeFeatureLayer_management(newSHP, "point_lyr")
     sdeMOE = arcpy.CreateDatabaseConnection_management(sdeTempPath, 'tempMOEServ.sde', \
                                               'ORACLE', 'stl-pgisdb-20:1526/PGISE',\
                                               'DATABASE_AUTH', 'IMAPVIEW', \
@@ -1310,7 +1354,16 @@ try:
     os.remove(sdeMOWPoly.getOutput(0))
 #    # close out the log file
     print("Closing the log file.")
-    log.close() 
+    log.close()
+    d = datetime.datetime.now()
+    log.write("Log: Script Ran successfully at  " + str(d) + "\n")
+    log.close()
+    html=r"C:\temp\USICScriptLog.html"
+    contents = open("C:\\temp\\USIC_Log.txt","r")
+    with open(r"C:\temp\USICScriptLog.html", "w") as e:
+        for lines in contents.readlines():
+            e.write("<pre>" + lines + "</pre> <br>\n")
+    sendEmail(getEmails(feature),getName(feature))
    
 except: 
     tb = sys.exc_info()[2]
@@ -1321,4 +1374,10 @@ except:
     log.write("" + pymsg + "\n")
     log.write("" + msgs + "")
     print(msgs)
-    log.close() 
+    log.close()
+    html=r"C:\temp\USICScriptLog.html"
+    contents = open("C:\\temp\\USIC_Log.txt","r")
+    with open(r"C:\temp\USICScriptLog.html", "w") as e:
+        for lines in contents.readlines():
+            e.write("<pre>" + lines + "</pre> <br>\n")
+    sendEmail(getEmails(feature),getName(feature))
