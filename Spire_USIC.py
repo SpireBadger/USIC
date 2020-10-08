@@ -148,7 +148,7 @@ try:
     # will also create file if not already there
 ##    logName = "LogFile.txt"
 ##    logPath = os.path.join(sdeTempPath, logName)
-    log = open(r"C:\Scripts\USICLogs\USIC_Log.txt","w")
+    log = open(r"C:\Scripts\USICLogs\USIC_Log.txt","a+")
     log.write("----------------------------" + "\n")
     log.write("----------------------------" + "\n")
     # write datetime to log
@@ -1341,9 +1341,9 @@ try:
     # Set the html file to be used
     html=r"C:\Scripts\USICLogs\USICScriptLog.html"
     # Open the log file
-    contents = open(r"C:\Scripts\USICLogs\USIC_Log.txt","r")
+    contents = open(r"C:\Scripts\USICLogs\USIC_Log.txt","a+")
     # Write the log file to the html file
-    with open(r"C:\Scripts\USICLogs\USICScriptLog.html", "w") as e:
+    with open(r"C:\Scripts\USICLogs\USICScriptLog.html", "a+") as e:
         for lines in contents.readlines():
             e.write("<pre>" + lines + "</pre> <br>\n")
     # Email the log to recipients
@@ -1361,7 +1361,7 @@ except:
     log.close()
     html=r"C:\Scripts\USICLogs\USICScriptLog.html"
     contents = open(r"C:\Scripts\USICLogs\USIC_Log.txt","r")
-    with open(r"C:\Scripts\USICLogs\USICScriptLog.html", "w") as e:
+    with open(r"C:\Scripts\USICLogs\USICScriptLog.html", "a+") as e:
         for lines in contents.readlines():
             e.write("<pre>" + lines + "</pre> <br>\n")
     sendEmail(getEmails(feature),getName(feature))
