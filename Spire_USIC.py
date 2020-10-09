@@ -460,7 +460,7 @@ try:
 ##------------------------Customer------------------------- ----------- 
     shpName = "customer"
     inputFC = sdeAL.getOutput(0) + '\GISADMIN.CCSData\GISADMIN.Customer'
-    keepList = ['METERLOCATION','ADDRESS']
+    keepList = ['METERLOCATION','ADDRESS', 'METERNUMBER']
     copyFeature(shpName,sdeAL,keepList,inputFC)
     
 #############################   MISSOURI EAST    ############################### 
