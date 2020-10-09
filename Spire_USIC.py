@@ -460,7 +460,7 @@ try:
 ###------------------------Customer------------------------- ----------- 
 #    shpName = "customer"
 #    inputFC = sdeAL.getOutput(0) + '\GISADMIN.CCSData\GISADMIN.Customer'
-#    keepList = ['METERLOCATION','ADDRESS']
+#    keepList = ['METERLOCATION','ADDRESS', 'METERNUMBER']
 #    copyFeature(shpName,sdeAL,keepList,inputFC)
 #    
 ##############################   MISSOURI EAST    ############################### 
@@ -504,8 +504,8 @@ try:
     # Fields to fill dictionary
     svcFields = ['MXLOCATION','STREETADDRESS']
     # service line feature class to use for search
-    searchFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
-    distMainFC = sdeMOW.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
+    searchFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.Service'
+    distMainFC = sdeMOE.getOutput(0) + '\LGC_GAS.GasFacilities\LGC_GAS.DistributionMain'
     # Insert search cursor
     with arcpy.da.SearchCursor(searchFC, svcFields) as Searchcursor:
         # For each row in cursor, get data for dictionary
@@ -521,8 +521,6 @@ try:
     del row, Searchcursor
 ##
 #    # Update the created shapefile with the new dictionary
-    # temp SHP location - delete after testing, exists to use test shp
-    ##testingSHP = r'C:\USICtemp\MoWest\ServicePointUSIC.shp'
     # Use update cursor to update service point shp
     with arcpy.da.UpdateCursor(newSHP, ['SERVICEMXL','STREETADDR']) as cur:
 #         For each row in cursor, iterate
@@ -563,18 +561,15 @@ try:
     print("Layers selected.")
 
     # Copy features to in memory fc
-#    memLine = "in_memory" + "\\" + "svcLine_lyr"
-    nomemLine = "svcLine_lyr"
-#    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
-    arcpy.CopyFeatures_management("svcLine_lyr", nomemLine)
+    memLine = "in_memory" + "\\" + "svcLine_lyr"
+    arcpy.CopyFeatures_management("svcLine_lyr", memLine)
     print("Service line copied.")
     
     # Generate points along lines for END_POINTS
     # Use FeatureVerticesToPoints_management using BOTH_ENDS
-#    memPoints = "in_memory" + "\\" + "vertice_points"
-    nomemPoints = "vertice_points"
-    arcpy.FeatureVerticesToPoints_management(nomemLine, nomemPoints, "BOTH_ENDS")
-    arcpy.MakeFeatureLayer_management(nomemPoints, "memPoint_lyr")
+    memPoints = "in_memory" + "\\" + "vertice_points"
+    arcpy.FeatureVerticesToPoints_management(memLine, memPoints, "BOTH_ENDS")
+    arcpy.MakeFeatureLayer_management(memPoints, "memPoint_lyr")
     print("Vertice Points created.")
     
     # Select newly generated points that intersect with dist main, invert
@@ -586,15 +581,12 @@ try:
                                            invert_spatial_relationship="INVERT")
     
     # Copy selected features to in memory
-#    memPointsNew = "in_memory" + "\\" + "notdMain_points"
-    nomemPointsNew = "notdMain_points"
-    arcpy.CopyFeatures_management("memPoint_lyr", nomemPointsNew)
-    fieldsLi = arcpy.ListFields(nomemPointsNew)
-#    for field in fieldsLi:
-#        print("{0} is a field in memPointsNew.".format(field.name))
+    memPointsNew = "in_memory" + "\\" + "notdMain_points"
+    arcpy.CopyFeatures_management("memPoint_lyr", memPointsNew)
+    fieldsLi = arcpy.ListFields(memPointsNew)
     
     # Append in memory features to shapefile using No_Test
-    appendLayer = nomemPointsNew
+    appendLayer = memPointsNew
     target_layer = newSHP
     
     # Set field mappings object var
